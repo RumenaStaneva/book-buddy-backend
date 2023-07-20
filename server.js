@@ -12,15 +12,20 @@ app.use(cors());
 let PORT = process.env.DEV_PORT
 let KEY = process.env.KEY
 
+app.get('/', (req, res) => {
+    res.send('Welcome to the Book Search API');
+});
+
 app.post('/search-book-title', async (req, res, next) => {
     try {
-        const url = `https://www.googleapis.com/books/v1/volumes?q=${req.body.title}&maxResults=40&printType=books&key=${KEY}`
+        const { title, startIndex, maxResults } = req.body;
+        const url = `https://www.googleapis.com/books/v1/volumes?q=${title}&startIndex=${startIndex}&maxResults=${maxResults}&printType=books&key=${KEY}`;
         const response = await axios.get(url);
-        res.setHeader('Content-Type', 'application/json');
-        res.send(JSON.stringify(response.data));
+        res.json(response.data);
 
     } catch (error) {
-        console.log(error);
+        console.error('Error fetching books:', error.message);
+        res.status(500).json({ error: 'Error fetching books from the Google Books API' });
     }
 });
 
