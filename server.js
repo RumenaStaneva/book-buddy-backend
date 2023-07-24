@@ -2,7 +2,8 @@ const express = require('express');
 const app = express();
 const dotenv = require('dotenv');
 var cors = require('cors');
-const bookRoutes = require('./routes/books')
+const bookRoutes = require('./routes/books');
+const userRoutes = require('./routes/user');
 const mongoose = require('mongoose');
 
 dotenv.config();
@@ -19,6 +20,7 @@ app.use((req, res, next) => {
 })
 
 app.use('/', bookRoutes);
+app.use('/', userRoutes);
 
 mongoose.connect(MONGO_URI)
     .then(() => {
