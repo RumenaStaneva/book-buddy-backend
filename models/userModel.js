@@ -47,4 +47,5 @@ userSchema.statics.signup = async function (email, password, isAdmin) {
     return user;
 }
 
+
 module.exports = mongoose.model('User', userSchema);
