@@ -19,8 +19,8 @@ app.use((req, res, next) => {
     next();
 })
 
-app.use('/', bookRoutes);
 app.use('/', userRoutes);
+app.use('/', bookRoutes);
 
 mongoose.connect(MONGO_URI)
     .then(() => {
