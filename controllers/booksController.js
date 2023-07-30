@@ -42,7 +42,6 @@ const addToShelf = async (req, res) => {
 
     const user = await User.findOne({ email: userEmail });
     let userId;
-    console.log(user);
     if (!user) {
         console.log('No such user in DB');
     } else {
@@ -52,8 +51,12 @@ const addToShelf = async (req, res) => {
     try {
         const book = await BookModel.createBook(bookApiId, title, authors, description, publisher, thumbnail, categories, pageCount);
         if (book) {
-            const shelf = await LibraryBookModel.createLibraryBook(userId, book._id, [], 0, 0);
-            res.status(200).json({ shelf });
+            try {
+                const shelf = await LibraryBookModel.createLibraryBook(userId, book._id, [], 0, 0);
+                res.status(200).json({ book, shelf });
+            } catch (error) {
+                res.status(400).json({ error: error.message });
+            }
         }
     } catch (error) {
         res.status(400).json({ error: error.message });

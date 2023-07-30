@@ -30,15 +30,16 @@ libraryBookSchema.statics.createLibraryBook = async function (owner, book, notes
     //validation
 
     //todo make it to search for user's book
-    //const exists = await this.findOne({ book })
-    // if (exists) {
-    //     throw Error('book already exists')
-    // }
+    const exists = await this.findOne({ owner, book })
+    if (exists) {
+        throw new Error('Book already exists');
+    } else {
+        const libraryBook = await this.create({ owner, book, notes, progress, shelf })
+
+        return libraryBook;
+    }
 
 
-    const libraryBook = await this.create({ owner, book, notes, progress, shelf })
-
-    return libraryBook;
 };
 
 module.exports = mongoose.model('LibraryBook', libraryBookSchema);

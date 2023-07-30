@@ -27,7 +27,7 @@ const bookSchema = new Schema({
     },
     categories: {
         type: Array,
-        required: true,
+        default: ['Not specified']
     },
     pageCount: {
         type: String,
@@ -36,21 +36,22 @@ const bookSchema = new Schema({
 });
 
 bookSchema.statics.createBook = async function (bookApiId, title, authors, description, publisher, thumbnail, categories, pageCount) {
-    //validation for everything
-    if (!bookApiId || !title) {
+    //validation
+    console.log(bookApiId, title, authors, description, publisher, thumbnail, categories, pageCount);
+    if (!bookApiId || !title || !authors || !description || !publisher || !thumbnail || !pageCount) {
         throw Error('All fields must be filled');
     }
 
-    //todo make it to search for user's book
-    //const exists = await this.findOne({ book })
-    // if (exists) {
-    //     throw Error('book already exists')
-    // }
+
+    const existingBook = await this.findOne({ bookApiId })
+    if (existingBook) {
+        return existingBook;
+    } else {
+        const book = await this.create({ bookApiId, title, authors, description, publisher, thumbnail, categories, pageCount })
+        return book;
+    }
 
 
-    const book = await this.create({ bookApiId, title, authors, description, publisher, thumbnail, categories, pageCount })
-
-    return book;
 };
 
 
