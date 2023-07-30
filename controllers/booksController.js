@@ -19,6 +19,11 @@ const searchBooks = async (req, res, next) => {
     }
 }
 
+const getUserLibrary = (req, res) => {
+    res.json({ "message": "congarts, you made a protected route" })
+}
+
 module.exports = {
-    searchBooks
+    searchBooks,
+    getUserLibrary
 }
