@@ -24,6 +24,7 @@ const bookSchema = new Schema({
     },
     thumbnail: {
         type: String,
+        default: null,
     },
     categories: {
         type: Array,
@@ -37,8 +38,8 @@ const bookSchema = new Schema({
 
 bookSchema.statics.createBook = async function (bookApiId, title, authors, description, publisher, thumbnail, categories, pageCount) {
     //validation
-    console.log(bookApiId, title, authors, description, publisher, thumbnail, categories, pageCount);
-    if (!bookApiId || !title || !authors || !description || !publisher || !thumbnail || !pageCount) {
+    // console.log(bookApiId, title, authors, description, publisher, thumbnail, categories, pageCount);
+    if (!bookApiId || !title || !authors || !description || !publisher || !pageCount) {
         throw Error('All fields must be filled');
     }
 

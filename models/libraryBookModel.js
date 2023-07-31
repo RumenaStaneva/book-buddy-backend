@@ -32,7 +32,7 @@ libraryBookSchema.statics.createLibraryBook = async function (owner, book, notes
     //todo make it to search for user's book
     const exists = await this.findOne({ owner, book })
     if (exists) {
-        throw new Error('Book already exists');
+        throw new Error('Book already exists in your library');
     } else {
         const libraryBook = await this.create({ owner, book, notes, progress, shelf })
 

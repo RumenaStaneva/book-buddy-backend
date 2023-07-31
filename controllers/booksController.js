@@ -14,8 +14,10 @@ const searchBooks = async (req, res, next) => {
         const { title, startIndex, maxResults } = req.body;
         const url = `https://www.googleapis.com/books/v1/volumes?q=${title}&startIndex=${startIndex}&maxResults=${maxResults}&printType=books&key=${KEY}`;
         const response = await axios.get(url);
-        res.json(response.data);
 
+        const books = response.data.items;
+        const totalItems = response.data.totalItems;
+        res.status(200).json({ books, totalItems });
     } catch (error) {
         console.error('Error fetching books:', error.message);
         res.status(500).json({ error: 'Error fetching books from the Google Books API' });
@@ -52,13 +54,15 @@ const addToShelf = async (req, res) => {
         const book = await BookModel.createBook(bookApiId, title, authors, description, publisher, thumbnail, categories, pageCount);
         if (book) {
             try {
-                const shelf = await LibraryBookModel.createLibraryBook(userId, book._id, [], 0, 0);
-                res.status(200).json({ book, shelf });
+                const library = await LibraryBookModel.createLibraryBook(userId, book._id, [], 0, 0);
+                res.status(200).json({ book, library });
             } catch (error) {
+                console.log(error.message);
                 res.status(400).json({ error: error.message });
             }
         }
     } catch (error) {
+        console.log(error);
         res.status(400).json({ error: error.message });
     }
 }
