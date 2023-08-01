@@ -1,7 +1,6 @@
 const axios = require('axios');
 const dotenv = require('dotenv');
 const BookModel = require('../models/bookModel');
-const LibraryBookModel = require('../models/libraryBookModel');
 const User = require('../models/userModel');
 dotenv.config();
 
@@ -37,6 +36,9 @@ const addToShelf = async (req, res) => {
         thumbnail,
         categories,
         pageCount,
+        notes,
+        progress,
+        shelf
     } = req.body;
 
 
@@ -49,15 +51,8 @@ const addToShelf = async (req, res) => {
     }
 
     try {
-        const book = await BookModel.createBook(bookApiId, title, authors, description, publisher, thumbnail, categories, pageCount);
-        if (book) {
-            try {
-                const shelf = await LibraryBookModel.createLibraryBook(userId, book._id, [], 0, 0);
-                res.status(200).json({ book, shelf });
-            } catch (error) {
-                res.status(400).json({ error: error.message });
-            }
-        }
+        const book = await BookModel.createBook(bookApiId, title, authors, description, publisher, thumbnail, categories, pageCount, notees, progress, shelf);
+        res.status(200).json({ book });
     } catch (error) {
         res.status(400).json({ error: error.message });
     }
