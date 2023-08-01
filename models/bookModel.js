@@ -56,7 +56,7 @@ const bookSchema = new Schema({
 
 bookSchema.statics.createBook = async function (bookApiId, owner, title, authors, description, publisher, thumbnail, categories, pageCount, notes, progress, shelf) {
 
-    console.log(bookApiId, title, authors, description, publisher, thumbnail, categories, pageCount);
+    console.log(title);
 
     try {
         // Additional validation using express-validator
