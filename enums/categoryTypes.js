@@ -44,6 +44,7 @@ const CategoryType = {
     LITERARY_CRITICISM: 'Essays/Critiques on Literature',
     SHORT_STORY_COLLECTIONS: 'Anthologies/Short Story Collections',
     CLASSIC_LITERATURE: 'Classic Literature',
+    NOT_SPECIFIED: 'Not specified'
 };
 
 module.exports = CategoryType;
