@@ -4,6 +4,28 @@ const validator = require('validator');
 
 const Schema = mongoose.Schema;
 
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     User:
+ *       type: object
+ *       properties:
+ *         email:
+ *           type: string
+ *           description: The email address of the user.
+ *         password:
+ *           type: string
+ *           description: The password of the user.
+ *         isAdmin:
+ *           type: boolean
+ *           description: Indicates whether the user is an admin or not.
+ *       required:
+ *         - email
+ *         - password
+ *         - isAdmin
+ */
+
 const userSchema = new Schema({
     email: {
         type: String,
