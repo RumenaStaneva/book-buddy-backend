@@ -5,6 +5,61 @@ const { body } = require('express-validator');
 
 const Schema = mongoose.Schema;
 
+
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     Book:
+ *       type: object
+ *       properties:
+ *         bookApiId:
+ *           type: string
+ *           description: The unique identifier for the book.
+ *         owner:
+ *           type: string
+ *           description: The owner of the book.
+ *         title:
+ *           type: string
+ *           description: The title of the book.
+ *         authors:
+ *           type: array
+ *           items:
+ *             type: string
+ *           description: The authors of the book.
+ *         description:
+ *           type: string
+ *           description: The description of the book.
+ *         publisher:
+ *           type: string
+ *           description: The publisher of the book.
+ *         thumbnail:
+ *           type: string
+ *           description: The URL of the book's thumbnail.
+ *         category:
+ *           type: string
+ *           description: The category of the book.
+ *         pageCount:
+ *           type: string
+ *           description: The number of pages in the book.
+ *         progress:
+ *           type: number
+ *           description: The reading progress of the book.
+ *         shelf:
+ *           type: number
+ *           description: The shelf where the book is placed.
+ *           enum: [0, 1, 2]  # Example values for ShelfType
+ *           default: 1  # Default value for the shelf.
+ *       required:
+ *         - bookApiId
+ *         - owner
+ *         - title
+ *         - authors
+ *         - description
+ *         - pageCount
+ *         - shelf
+ */
+
 const bookSchema = new Schema({
     bookApiId: {
         type: String,
@@ -39,9 +94,6 @@ const bookSchema = new Schema({
     pageCount: {
         type: String,
         required: true,
-    },
-    notes: {
-        type: Array,
     },
     progress: {
         type: Number,
