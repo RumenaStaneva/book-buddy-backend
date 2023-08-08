@@ -2,6 +2,7 @@ const axios = require('axios');
 const dotenv = require('dotenv');
 const BookModel = require('../models/bookModel');
 const User = require('../models/userModel');
+
 dotenv.config();
 
 
@@ -26,25 +27,37 @@ const getUserLibrary = (req, res) => {
 }
 
 const addToShelf = async (req, res) => {
+    // console.log(req.file);
+    // console.log(req.body);
+    // console.log(req.body.thumbnail);
+    // const imageName = req.file.filename;
+    // console.log(imageName);
+    if (!req.file && !req.body.thumbnail) {
+        return res.status(400).json({ error: 'Please upload a file' });
+    }
+
+    const thumbnail = req.file ? req.file.filename : req.body.thumbnail;
+
     const {
-        userEmail,
         bookApiId,
+        userEmail,
         title,
         authors,
         description,
         publisher,
-        thumbnail,
         categories,
         pageCount,
         notes,
         progress,
         shelf
-    } = req.body;
+    } = JSON.parse(req.body.bookToAdd);
+
 
     const user = await User.findOne({ email: userEmail });
     let owner;
     if (!user) {
         console.log('No such user in DB');
+        return res.status(401).json({ error: 'No such user in DB' });
     } else {
         owner = user._id.toString();
     }
@@ -58,8 +71,22 @@ const addToShelf = async (req, res) => {
     }
 }
 
+const getBookDetails = async (req, res) => {
+    console.log('1');
+    // try {
+    //     const book = await Book.findById(req.params.id);
+    //     if (!book) {
+    //         return res.status(404).json({ error: 'Book not found' });
+    //     }
+    //     res.json(book);
+    // } catch (error) {
+    //     res.status(500).json({ error: 'Internal server error' });
+    // }
+}
+
 module.exports = {
     searchBooks,
     getUserLibrary,
-    addToShelf
+    addToShelf,
+    getBookDetails
 }

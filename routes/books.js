@@ -1,7 +1,10 @@
 const express = require('express');
-const { searchBooks, getUserLibrary, addToShelf } = require('../controllers/booksController');
+const { searchBooks, getUserLibrary, addToShelf, getBookDetails } = require('../controllers/booksController');
 const requireAuth = require('../middleware/requireAuth');
-
+// 1
+// const multer = require('multer')
+// 2
+// const upload = multer({ dest: 'images/' })
 const router = express.Router();
 
 
@@ -52,6 +55,11 @@ router.get('/library/:id', getUserLibrary)
  *       '500':
  *         description: Internal server error
  */
-router.post('/add-to-shelf', addToShelf)
+router.post('/add-to-shelf',
+    // upload.single('thumbnail'), 
+    addToShelf)
+
+// API route to get book details by ID
+// router.get('/books/:id', getBookDetails);
 
 module.exports = router;

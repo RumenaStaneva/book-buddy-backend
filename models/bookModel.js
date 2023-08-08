@@ -109,7 +109,6 @@ const bookSchema = new Schema({
 bookSchema.statics.createBook = async function (data) {
 
     const { bookApiId, owner, title, authors, description, publisher, thumbnail, categories, pageCount, notes, progress, shelf } = data;
-
     try {
         // Additional validation using express-validator
         await Promise.all([
@@ -119,7 +118,7 @@ bookSchema.statics.createBook = async function (data) {
             body(authors).notEmpty().withMessage('Authors are required').isArray().run(this),
             body(description).notEmpty().withMessage('Description is required').trim().run(this),
             body(publisher).trim().run(this),
-            body(thumbnail).trim().run(this),
+            body(thumbnail).notEmpty().withMessage('Please upload an image').trim().run(this),
             body(categories).notEmpty().withMessage('Category is required').isIn(Object.values(CategoryType)).run(this),
             body(pageCount).notEmpty().withMessage('Page count is required').trim().run(this),
             body(notes).isArray().run(this),
