@@ -29,12 +29,13 @@ const getUserLibrary = (req, res) => {
 const addToShelf = async (req, res) => {
     // console.log(req.file);
     // console.log(req.body);
-    // console.log(req.body.thumbnail);
+    // console.log(req.body);
     // const imageName = req.file.filename;
     // console.log(imageName);
-    if (!req.file && !req.body.thumbnail) {
-        return res.status(400).json({ error: 'Please upload a file' });
-    }
+
+    // if (!req.file && !req.body.thumbnail) {
+    //     return res.status(400).json({ error: 'Please upload a file' });
+    // }
 
     const thumbnail = req.file ? req.file.filename : req.body.thumbnail;
 
@@ -50,7 +51,7 @@ const addToShelf = async (req, res) => {
         notes,
         progress,
         shelf
-    } = JSON.parse(req.body.bookToAdd);
+    } = req.body;
 
 
     const user = await User.findOne({ email: userEmail });

@@ -26,7 +26,7 @@ app.use(
 //middleware
 app.use((req, res, next) => {
     next();
-})
+});
 
 app.use('/', userRoutes);
 app.use('/', bookRoutes);

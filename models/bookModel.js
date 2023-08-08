@@ -92,8 +92,15 @@ const bookSchema = new Schema({
         default: 'Not specified'
     },
     pageCount: {
-        type: String,
-        required: true,
+        type: Number,
+        required: [true, 'Page count is required'],
+        min: [1, 'Page count must be a positive integer'],
+        validate: {
+            validator: function (value) {
+                return value !== 0; // Custom validation condition
+            },
+            message: 'Page count must be greater than 0',
+        },
     },
     progress: {
         type: Number,
@@ -118,9 +125,9 @@ bookSchema.statics.createBook = async function (data) {
             body(authors).notEmpty().withMessage('Authors are required').isArray().run(this),
             body(description).notEmpty().withMessage('Description is required').trim().run(this),
             body(publisher).trim().run(this),
-            body(thumbnail).notEmpty().withMessage('Please upload an image').trim().run(this),
+            body(thumbnail).trim().run(this),
             body(categories).notEmpty().withMessage('Category is required').isIn(Object.values(CategoryType)).run(this),
-            body(pageCount).notEmpty().withMessage('Page count is required').trim().run(this),
+            body('pageCount').notEmpty().withMessage('Page count is required').isInt({ min: 1 }).withMessage('Page count must be a positive integer'),
             body(notes).isArray().run(this),
             body(progress).isNumeric().run(this),
             body(shelf).notEmpty().withMessage('Shelf is required').isIn(Object.values(ShelfType)).run(this),
