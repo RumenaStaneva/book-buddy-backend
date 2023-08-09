@@ -12,10 +12,6 @@ router.get('/', (req, res) => {
     res.send('Welcome to the Book Search API');
 });
 
-router.use(requireAuth);
-//fire this middleware before everything bellow so that thwy are protected
-//require auth for all books routes
-
 /**
  * @swagger
  * /search-book-title:
@@ -27,6 +23,9 @@ router.use(requireAuth);
  */
 router.post('/search-book-title', searchBooks);
 
+//fire this middleware before everything bellow so that thwy are protected
+//require auth for all books routes
+router.use(requireAuth);
 router.get('/library/:id', getUserLibrary)
 
 
