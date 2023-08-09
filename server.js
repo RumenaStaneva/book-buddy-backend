@@ -28,8 +28,8 @@ app.use((req, res, next) => {
     next();
 });
 
-app.use('/', userRoutes);
-app.use('/', bookRoutes);
+app.use('/users', userRoutes);
+app.use('/books', bookRoutes);
 
 mongoose.connect(MONGO_URI)
     .then(() => {
