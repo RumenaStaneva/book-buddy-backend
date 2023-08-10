@@ -1,9 +1,8 @@
 const express = require('express');
-const { searchBooks, getUserLibrary, addToShelf } = require('../controllers/booksController');
+const { getUserLibrary, addToShelf } = require('../controllers/booksController');
 const requireAuth = require('../middleware/requireAuth');
 
 const router = express.Router();
-
 
 router.get('/', (req, res) => {
     res.send('Welcome to the Book Search API');
@@ -12,20 +11,7 @@ router.get('/', (req, res) => {
 router.use(requireAuth);
 //fire this middleware before everything bellow so that thwy are protected
 //require auth for all books routes
-
-/**
- * @swagger
- * /search-book-title:
- *   get:
- *     summary: Get data from Google Books API.
- *     responses:
- *       200:
- *         description: Successful response.
- */
-router.post('/search-book-title', searchBooks);
-
 router.get('/library/:id', getUserLibrary)
-
 
 /**
  * @swagger
