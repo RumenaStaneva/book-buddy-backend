@@ -61,7 +61,6 @@ const getProfile = async (req, res) => {
 
     try {
         if (userProfile) {
-            console.log('User email:', userProfile.email);
             res.json({ userProfile });
         } else {
             res.status(404).json({ error: 'User profile not found' });
