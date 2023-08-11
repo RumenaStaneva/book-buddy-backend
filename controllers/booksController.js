@@ -19,8 +19,28 @@ const searchBooks = async (req, res, next) => {
     }
 }
 
-const getUserLibrary = (req, res) => {
-    res.json({ "message": "congarts, you made a protected route" })
+const getUserLibrary = async (req, res) => {
+    const userId = req.user._id;
+
+    const user = await User.findOne({ _id: userId });
+    if (user) {
+        try {
+            const wantToReadBooks = await BookModel.find({ owner: userId, shelf: 0 })
+                .sort({ _id: -1 })
+                .limit(5);
+            const currntlyReadingBooks = await BookModel.find({ owner: userId, shelf: 1 })
+                .sort({ _id: -1 })
+                .limit(5);
+            const readBooks = await BookModel.find({ owner: userId, shelf: 2 })
+                .sort({ _id: -1 })
+                .limit(5);
+            res.status(200).json({ wantToReadBooks, currntlyReadingBooks, readBooks });
+        } catch (error) {
+            res.status(400).json({ error: error.message });
+        }
+    } else {
+        res.status(400).json({ error: 'User does not exist' });
+    }
 }
 
 const addToShelf = async (req, res) => {

@@ -11,7 +11,7 @@ router.get('/', (req, res) => {
 router.use(requireAuth);
 //fire this middleware before everything bellow so that thwy are protected
 //require auth for all books routes
-router.get('/library/:id', getUserLibrary)
+router.get('/library', getUserLibrary)
 
 /**
  * @swagger
