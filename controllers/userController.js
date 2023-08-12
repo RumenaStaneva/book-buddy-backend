@@ -11,10 +11,10 @@ const loginUser = async (req, res) => {
     const { email, password } = req.body;
     try {
         const user = await User.login(email, password);
-
+        const username = user.username;
         if (user) {
             const token = createToken(user._id);
-            res.status(200).json({ email, token });
+            res.status(200).json({ email, token, username });
         }
     } catch (error) {
         res.status(400).json({ error: error.message });
@@ -32,7 +32,7 @@ const signUpUser = async (req, res) => {
         const user = await User.signup(email, password, isAdmin, bio, username);
 
         const token = createToken(user._id);
-        res.status(200).json({ email, token });
+        res.status(200).json({ email, token, username });
     } catch (error) {
         res.status(400).json({ error: error.message });
     }
@@ -48,7 +48,7 @@ const signUpAdmin = async (req, res) => {
     try {
         const userAdmin = await User.signup(email, password, isAdmin, bio, username);
         const token = createToken(userAdmin._id);
-        res.status(200).json({ email, token });
+        res.status(200).json({ email, token, username });
     } catch (error) {
         res.status(400).json({ error: error.message });
     }
