@@ -1,5 +1,5 @@
 const express = require('express');
-const { getUserLibrary, addToShelf } = require('../controllers/booksController');
+const { getUserLibrary, addToShelf, updateBookProgress } = require('../controllers/booksController');
 const requireAuth = require('../middleware/requireAuth');
 
 const router = express.Router();
@@ -38,6 +38,8 @@ router.get('/library', getUserLibrary)
  *       '500':
  *         description: Internal server error
  */
-router.post('/add-to-shelf', addToShelf)
+router.post('/add-to-shelf', addToShelf);
+
+router.post('/update-book-progress', updateBookProgress);
 
 module.exports = router;

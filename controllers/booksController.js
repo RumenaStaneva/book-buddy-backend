@@ -76,8 +76,32 @@ const addToShelf = async (req, res) => {
     }
 }
 
+const updateBookProgress = async (req, res) => {
+    const userId = req.user._id;
+    const user = await User.findOne({ _id: userId });
+    if (user) {
+        const bookId = req.body.bookId;
+        const book = await BookModel.findOne({ owner: userId, _id: bookId });
+        if (book) {
+            const updatedProgress = req.body.progress;
+            try {
+                book.progress = updatedProgress;
+                await book.save();
+                res.status(200).json({ book });
+            } catch (error) {
+                res.status(400).json({ error: error.message });
+            }
+        } else {
+            res.status(400).json({ error: 'Book does not exist' });
+        }
+    } else {
+        res.status(400).json({ error: 'User does not exist' });
+    }
+}
+
 module.exports = {
     searchBooks,
     getUserLibrary,
-    addToShelf
+    addToShelf,
+    updateBookProgress
 }
