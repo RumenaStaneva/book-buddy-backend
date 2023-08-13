@@ -1,5 +1,5 @@
 const express = require('express');
-const { getUserLibrary, addToShelf, updateBookProgress, updateBookShelfWhenRead } = require('../controllers/booksController');
+const { getUserLibrary, addToShelf, updateBookProgress } = require('../controllers/booksController');
 const requireAuth = require('../middleware/requireAuth');
 // 1
 // const multer = require('multer')
@@ -44,6 +44,5 @@ router.get('/library', getUserLibrary)
 router.post('/add-to-shelf', addToShelf);
 
 router.post('/update-book-progress', updateBookProgress);
-router.post('/update-shelf', updateBookShelfWhenRead);
 
 module.exports = router;

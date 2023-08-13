@@ -121,6 +121,5 @@ module.exports = {
     searchBooks,
     getUserLibrary,
     addToShelf,
-    updateBookProgress,
-    updateBookShelfWhenRead
+    updateBookProgress
 }
