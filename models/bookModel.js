@@ -127,7 +127,7 @@ bookSchema.statics.createBook = async function (data) {
             body(publisher).trim().run(this),
             body(thumbnail).trim().run(this),
             body(categories).notEmpty().withMessage('Category is required').isIn(Object.values(CategoryType)).run(this),
-            body('pageCount').notEmpty().withMessage('Page count is required').isInt({ min: 1 }).withMessage('Page count must be a positive integer'),
+            body(pageCount).notEmpty().withMessage('Page count is required').isInt({ min: 1 }).withMessage('Page count must be a positive integer'),
             body(notes).isArray().run(this),
             body(progress).isNumeric().run(this),
             body(shelf).notEmpty().withMessage('Shelf is required').isIn(Object.values(ShelfType)).run(this),
