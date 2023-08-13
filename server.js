@@ -27,7 +27,7 @@ app.use(
 //middleware
 app.use((req, res, next) => {
     next();
-})
+});
 
 app.use('/users', userRoutes);
 app.use('/api', apiRoutes);
