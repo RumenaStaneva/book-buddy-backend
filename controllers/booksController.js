@@ -2,6 +2,7 @@ const axios = require('axios');
 const dotenv = require('dotenv');
 const BookModel = require('../models/bookModel');
 const User = require('../models/userModel');
+
 dotenv.config();
 
 let KEY = process.env.KEY
@@ -44,14 +45,25 @@ const getUserLibrary = async (req, res) => {
 }
 
 const addToShelf = async (req, res) => {
+    // console.log(req.file);
+    // console.log(req.body);
+    // console.log(req.body);
+    // const imageName = req.file.filename;
+    // console.log(imageName);
+
+    // if (!req.file && !req.body.thumbnail) {
+    //     return res.status(400).json({ error: 'Please upload a file' });
+    // }
+
+    const thumbnail = req.file ? req.file.filename : req.body.thumbnail;
+
     const {
-        userEmail,
         bookApiId,
+        userEmail,
         title,
         authors,
         description,
         publisher,
-        thumbnail,
         categories,
         pageCount,
         notes,
@@ -59,10 +71,12 @@ const addToShelf = async (req, res) => {
         shelf
     } = req.body;
 
+
     const user = await User.findOne({ email: userEmail });
     let owner;
     if (!user) {
         console.log('No such user in DB');
+        return res.status(401).json({ error: 'No such user in DB' });
     } else {
         owner = user._id.toString();
     }

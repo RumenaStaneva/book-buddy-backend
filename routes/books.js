@@ -1,7 +1,10 @@
 const express = require('express');
 const { getUserLibrary, addToShelf, updateBookProgress, updateBookShelfWhenRead } = require('../controllers/booksController');
 const requireAuth = require('../middleware/requireAuth');
-
+// 1
+// const multer = require('multer')
+// 2
+// const upload = multer({ dest: 'images/' })
 const router = express.Router();
 
 router.get('/', (req, res) => {
