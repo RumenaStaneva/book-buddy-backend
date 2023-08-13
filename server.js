@@ -4,6 +4,7 @@ const dotenv = require('dotenv');
 var cors = require('cors');
 const bookRoutes = require('./routes/books');
 const userRoutes = require('./routes/user');
+const apiRoutes = require('./routes/api');
 const mongoose = require('mongoose');
 
 const swaggerUi = require('swagger-ui-express');
@@ -29,6 +30,7 @@ app.use((req, res, next) => {
 });
 
 app.use('/users', userRoutes);
+app.use('/api', apiRoutes);
 app.use('/books', bookRoutes);
 
 mongoose.connect(MONGO_URI)
