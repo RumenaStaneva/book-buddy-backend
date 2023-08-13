@@ -2,11 +2,10 @@ const axios = require('axios');
 const dotenv = require('dotenv');
 const BookModel = require('../models/bookModel');
 const User = require('../models/userModel');
+
 dotenv.config();
 
-
 let KEY = process.env.KEY
-
 
 const searchBooks = async (req, res, next) => {
     try {
@@ -21,19 +20,50 @@ const searchBooks = async (req, res, next) => {
     }
 }
 
-const getUserLibrary = (req, res) => {
-    res.json({ "message": "congarts, you made a protected route" })
+const getUserLibrary = async (req, res) => {
+    const userId = req.user._id;
+
+    const user = await User.findOne({ _id: userId });
+    if (user) {
+        try {
+            const wantToReadBooks = await BookModel.find({ owner: userId, shelf: 0 })
+                .sort({ _id: -1 })
+                .limit(5);
+            const currntlyReadingBooks = await BookModel.find({ owner: userId, shelf: 1 })
+                .sort({ _id: -1 })
+                .limit(5);
+            const readBooks = await BookModel.find({ owner: userId, shelf: 2 })
+                .sort({ _id: -1 })
+                .limit(5);
+            res.status(200).json({ wantToReadBooks, currntlyReadingBooks, readBooks });
+        } catch (error) {
+            res.status(400).json({ error: error.message });
+        }
+    } else {
+        res.status(400).json({ error: 'User does not exist' });
+    }
 }
 
 const addToShelf = async (req, res) => {
+    // console.log(req.file);
+    // console.log(req.body);
+    // console.log(req.body);
+    // const imageName = req.file.filename;
+    // console.log(imageName);
+
+    // if (!req.file && !req.body.thumbnail) {
+    //     return res.status(400).json({ error: 'Please upload a file' });
+    // }
+
+    const thumbnail = req.file ? req.file.filename : req.body.thumbnail;
+
     const {
-        userEmail,
         bookApiId,
+        userEmail,
         title,
         authors,
         description,
         publisher,
-        thumbnail,
         categories,
         pageCount,
         notes,
@@ -41,10 +71,12 @@ const addToShelf = async (req, res) => {
         shelf
     } = req.body;
 
+
     const user = await User.findOne({ email: userEmail });
     let owner;
     if (!user) {
         console.log('No such user in DB');
+        return res.status(401).json({ error: 'No such user in DB' });
     } else {
         owner = user._id.toString();
     }
@@ -58,8 +90,56 @@ const addToShelf = async (req, res) => {
     }
 }
 
+const updateBookProgress = async (req, res) => {
+    const userId = req.user._id;
+    const user = await User.findOne({ _id: userId });
+    if (user) {
+        const bookId = req.body.bookId;
+        const book = await BookModel.findOne({ owner: userId, _id: bookId });
+        if (book) {
+            const updatedProgress = req.body.progress;
+            try {
+                book.progress = updatedProgress;
+                await book.save();
+                res.status(200).json({ book });
+            } catch (error) {
+                res.status(400).json({ error: error.message });
+            }
+        } else {
+            res.status(400).json({ error: 'Book does not exist' });
+        }
+    } else {
+        res.status(400).json({ error: 'User does not exist' });
+    }
+}
+
+const updateBookShelfWhenRead = async (req, res) => {
+    const userId = req.user._id;
+    const user = await User.findOne({ _id: userId });
+    if (user) {
+        const bookId = req.body.bookId;
+        const book = await BookModel.findOne({ owner: userId, _id: bookId });
+        if (book) {
+            const shelf = req.body.shelf;
+            try {
+                book.shelf = shelf;
+                await book.save();
+                res.status(200).json({ book });
+            } catch (error) {
+                res.status(400).json({ error: error.message });
+            }
+        } else {
+            res.status(400).json({ error: 'Book does not exist' });
+        }
+    } else {
+        res.status(400).json({ error: 'User does not exist' });
+    }
+}
+
 module.exports = {
     searchBooks,
     getUserLibrary,
-    addToShelf
+    addToShelf,
+    updateBookProgress,
+    updateBookShelfWhenRead
 }

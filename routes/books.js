@@ -1,9 +1,11 @@
 const express = require('express');
-const { searchBooks, getUserLibrary, addToShelf } = require('../controllers/booksController');
+const { getUserLibrary, addToShelf, updateBookProgress, updateBookShelfWhenRead } = require('../controllers/booksController');
 const requireAuth = require('../middleware/requireAuth');
-
+// 1
+// const multer = require('multer')
+// 2
+// const upload = multer({ dest: 'images/' })
 const router = express.Router();
-
 
 router.get('/', (req, res) => {
     res.send('Welcome to the Book Search API');
@@ -12,20 +14,7 @@ router.get('/', (req, res) => {
 router.use(requireAuth);
 //fire this middleware before everything bellow so that thwy are protected
 //require auth for all books routes
-
-/**
- * @swagger
- * /search-book-title:
- *   get:
- *     summary: Get data from Google Books API.
- *     responses:
- *       200:
- *         description: Successful response.
- */
-router.post('/search-book-title', searchBooks);
-
-router.get('/library/:id', getUserLibrary)
-
+router.get('/library', getUserLibrary)
 
 /**
  * @swagger
@@ -52,6 +41,9 @@ router.get('/library/:id', getUserLibrary)
  *       '500':
  *         description: Internal server error
  */
-router.post('/add-to-shelf', addToShelf)
+router.post('/add-to-shelf', addToShelf);
+
+router.post('/update-book-progress', updateBookProgress);
+router.post('/update-shelf', updateBookShelfWhenRead);
 
 module.exports = router;
