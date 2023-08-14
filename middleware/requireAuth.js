@@ -17,8 +17,12 @@ const requireAuth = async (req, res, next) => {
     try {
         const { _id } = jwt.verify(token, SECRET);
 
+        const user = await User.findOne({ _id }).select('_id');
+        if (!user) {
+            res.status(401).json({ error: 'Request is not authorized' });
+        }
         //attach the user property to request, so that when we go to one of the next middleware /some router functions/ 
-        req.user = await User.findOne({ _id }).select('_id'); //with select we choose which property to be returned from the found user
+        req.user = user; //with select we choose which property to be returned from the found user
         next();
     } catch (error) {
         res.status(401).json({ error: 'Request is not authorized' });
