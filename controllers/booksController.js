@@ -122,10 +122,31 @@ const updateBookShelfWhenRead = async (req, res) => {
     }
 }
 
+const getAllBooksOnShelf = async (req, res) => {
+    const userId = req.user._id;
+    const shelf = req.query.shelf;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 5;
+    const skip = (page - 1) * limit;
+
+    try {
+        const books = await BookModel.find({ owner: userId, shelf: shelf })
+            .skip(skip)
+            .limit(limit)
+            .exec();
+        const totalBooks = await BookModel.countDocuments({ owner: userId, shelf: shelf });
+        const totalPages = Math.ceil(totalBooks / limit);
+        res.status(200).json({ books, totalPages });
+    } catch (error) {
+        res.status(400).json({ error: 'Error while fetching all books on shelf' });
+    }
+}
+
 module.exports = {
     searchBooks,
     getUserLibrary,
     addToShelf,
     updateBookProgress,
-    updateBookShelfWhenRead
+    updateBookShelfWhenRead,
+    getAllBooksOnShelf
 }
