@@ -44,18 +44,7 @@ const getUserLibrary = async (req, res) => {
 }
 
 const addToShelf = async (req, res) => {
-    // console.log(req.file);
-    // console.log(req.body);
-    // console.log(req.body);
-    // const imageName = req.file.filename;
-    // console.log(imageName);
-
-    // if (!req.file && !req.body.thumbnail) {
-    //     return res.status(400).json({ error: 'Please upload a file' });
-    // }
-
     const thumbnail = req.file ? req.file.filename : req.body.thumbnail;
-
     const {
         bookApiId,
         userEmail,
@@ -63,14 +52,12 @@ const addToShelf = async (req, res) => {
         authors,
         description,
         publisher,
-        categories,
+        category,
         pageCount,
         notes,
         progress,
         shelf
     } = req.body;
-
-
     const user = await User.findOne({ email: userEmail });
     let owner;
     if (!user) {
@@ -80,9 +67,8 @@ const addToShelf = async (req, res) => {
         owner = user._id.toString();
     }
 
-
     try {
-        const book = await BookModel.createBook({ bookApiId, owner, title, authors, description, publisher, thumbnail, categories, pageCount, notes, progress, shelf });
+        const book = await BookModel.createBook({ bookApiId, owner, title, authors, description, publisher, thumbnail, category, pageCount, notes, progress, shelf });
         res.status(200).json({ book });
     } catch (error) {
         res.status(400).json({ error: error.message });
