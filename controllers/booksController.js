@@ -101,8 +101,7 @@ const updateBookProgress = async (req, res) => {
         res.status(400).json({ error: 'User does not exist' });
     }
 }
-
-
+//TODO Move it on updateBook 
 const getAllBooksOnShelf = async (req, res) => {
     const userId = req.user._id;
     const shelf = req.query.shelf;
@@ -123,10 +122,37 @@ const getAllBooksOnShelf = async (req, res) => {
     }
 }
 
+const updateBook = async (req, res) => {
+    const userId = req.user._id;
+    const {
+        _id,
+        title,
+        authors,
+        description,
+        category,
+        progress,
+        shelf
+    } = req.body.book;
+
+    try {
+        const book = await BookModel.findOneAndUpdate(
+            { owner: userId, _id: _id },
+            { title, authors, description, category, progress, shelf },
+            { new: true }
+        );
+        console.log(book);
+        res.status(200).json({ book });
+    } catch (error) {
+        res.status(400).json({ error: error.message });
+    }
+
+}
+
 module.exports = {
     searchBooks,
     getUserLibrary,
     addToShelf,
     updateBookProgress,
     getAllBooksOnShelf,
+    updateBook
 }
