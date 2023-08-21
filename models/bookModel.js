@@ -136,7 +136,6 @@ bookSchema.statics.createBook = async function (data) {
         if (existingBook) {
             throw new Error('Book already exists in your shelf');
         } else {
-            console.log(category, '3');
             const book = await this.create({ bookApiId, owner, title, authors, description, publisher, thumbnail, category, pageCount, notes, progress, shelf })
             return book;
         }

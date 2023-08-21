@@ -74,7 +74,7 @@ const addToShelf = async (req, res) => {
         res.status(400).json({ error: error.message });
     }
 }
-
+//TODO Move it on updateBook 
 const updateBookProgress = async (req, res) => {
     const userId = req.user._id;
     const user = await User.findOne({ _id: userId });
@@ -89,7 +89,6 @@ const updateBookProgress = async (req, res) => {
                     book.shelf = 2;
                 }
                 await book.save();
-                console.log(book);
                 res.status(200).json({ book });
             } catch (error) {
                 res.status(400).json({ error: error.message });
@@ -101,22 +100,33 @@ const updateBookProgress = async (req, res) => {
         res.status(400).json({ error: 'User does not exist' });
     }
 }
-//TODO Move it on updateBook 
+
 const getAllBooksOnShelf = async (req, res) => {
     const userId = req.user._id;
     const shelf = req.query.shelf;
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 5;
     const skip = (page - 1) * limit;
+    const filterCategory = req.query.category;
 
     try {
-        const books = await BookModel.find({ owner: userId, shelf: shelf })
-            .skip(skip)
-            .limit(limit)
-            .exec();
-        const totalBooks = await BookModel.countDocuments({ owner: userId, shelf: shelf });
-        const totalPages = Math.ceil(totalBooks / limit);
-        res.status(200).json({ books, totalPages });
+        if (filterCategory) {
+            const books = await BookModel.find({ owner: userId, shelf: shelf, category: filterCategory })
+                .skip(skip)
+                .limit(limit)
+                .exec();
+            const totalBooks = await BookModel.countDocuments({ owner: userId, shelf: shelf, categoty: filterCategory });
+            const totalPages = Math.ceil(totalBooks / limit);
+            res.status(200).json({ books, totalPages });
+        } else {
+            const books = await BookModel.find({ owner: userId, shelf: shelf })
+                .skip(skip)
+                .limit(limit)
+                .exec();
+            const totalBooks = await BookModel.countDocuments({ owner: userId, shelf: shelf });
+            const totalPages = Math.ceil(totalBooks / limit);
+            res.status(200).json({ books, totalPages });
+        }
     } catch (error) {
         res.status(400).json({ error: 'Error while fetching all books on shelf' });
     }
@@ -140,7 +150,6 @@ const updateBook = async (req, res) => {
             { title, authors, description, category, progress, shelf },
             { new: true }
         );
-        console.log(book);
         res.status(200).json({ book });
     } catch (error) {
         res.status(400).json({ error: error.message });
