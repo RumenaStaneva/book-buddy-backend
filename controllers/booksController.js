@@ -74,31 +74,44 @@ const addToShelf = async (req, res) => {
         res.status(400).json({ error: error.message });
     }
 }
-//TODO Move it on updateBook 
-const updateBookProgress = async (req, res) => {
+
+const updateBook = async (req, res) => {
     const userId = req.user._id;
-    const user = await User.findOne({ _id: userId });
-    if (user) {
-        const bookId = req.body.bookId;
-        const book = await BookModel.findOne({ owner: userId, _id: bookId });
-        if (book) {
-            const updatedProgress = req.body.progress;
-            try {
-                book.progress = updatedProgress;
-                if (book.pageCount == updatedProgress) {
-                    book.shelf = 2;
-                }
-                await book.save();
-                res.status(200).json({ book });
-            } catch (error) {
-                res.status(400).json({ error: error.message });
-            }
-        } else {
-            res.status(400).json({ error: 'Book does not exist' });
+    const {
+        _id,
+        title,
+        authors,
+        description,
+        category,
+        progress,
+        shelf
+    } = req.body.book;
+    try {
+        const book = await BookModel.findOne({ owner: userId, _id: _id });
+        if (!book) {
+            return res.status(400).json({ error: 'Book does not exist' });
         }
-    } else {
-        res.status(400).json({ error: 'User does not exist' });
+
+        const updatedProgress = progress;
+
+        book.progress = updatedProgress;
+
+        if (book.pageCount === updatedProgress) {
+            book.shelf = 2;
+        }
+
+        book.title = title;
+        book.authors = authors;
+        book.description = description;
+        book.category = category;
+        await book.save();
+
+        res.status(200).json({ book });
+
+    } catch (error) {
+        res.status(400).json({ error: error.message });
     }
+
 }
 
 const getAllBooksOnShelf = async (req, res) => {
@@ -132,36 +145,10 @@ const getAllBooksOnShelf = async (req, res) => {
     }
 }
 
-const updateBook = async (req, res) => {
-    const userId = req.user._id;
-    const {
-        _id,
-        title,
-        authors,
-        description,
-        category,
-        progress,
-        shelf
-    } = req.body.book;
-
-    try {
-        const book = await BookModel.findOneAndUpdate(
-            { owner: userId, _id: _id },
-            { title, authors, description, category, progress, shelf },
-            { new: true }
-        );
-        res.status(200).json({ book });
-    } catch (error) {
-        res.status(400).json({ error: error.message });
-    }
-
-}
-
 module.exports = {
     searchBooks,
     getUserLibrary,
     addToShelf,
-    updateBookProgress,
     getAllBooksOnShelf,
     updateBook
 }
