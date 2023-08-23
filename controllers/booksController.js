@@ -121,25 +121,27 @@ const getAllBooksOnShelf = async (req, res) => {
     const limit = parseInt(req.query.limit) || 5;
     const skip = (page - 1) * limit;
     const filterCategory = req.query.category;
+    const searchQuery = req.query.search;
 
     try {
+        let query = { owner: userId, shelf: shelf };
         if (filterCategory) {
-            const books = await BookModel.find({ owner: userId, shelf: shelf, category: filterCategory })
-                .skip(skip)
-                .limit(limit)
-                .exec();
-            const totalBooks = await BookModel.countDocuments({ owner: userId, shelf: shelf, categoty: filterCategory });
-            const totalPages = Math.ceil(totalBooks / limit);
-            res.status(200).json({ books, totalPages });
-        } else {
-            const books = await BookModel.find({ owner: userId, shelf: shelf })
-                .skip(skip)
-                .limit(limit)
-                .exec();
-            const totalBooks = await BookModel.countDocuments({ owner: userId, shelf: shelf });
-            const totalPages = Math.ceil(totalBooks / limit);
-            res.status(200).json({ books, totalPages });
+            query.category = filterCategory;
         }
+
+        if (searchQuery) {
+            query.title = { $regex: searchQuery, $options: 'i' };
+        }
+
+        const books = await BookModel.find(query)
+            .skip(skip)
+            .limit(limit)
+            .exec();
+
+        const totalBooks = await BookModel.countDocuments(query);
+        const totalPages = Math.ceil(totalBooks / limit);
+
+        res.status(200).json({ books, totalPages });
     } catch (error) {
         res.status(400).json({ error: 'Error while fetching all books on shelf' });
     }
