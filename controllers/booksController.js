@@ -147,10 +147,28 @@ const getAllBooksOnShelf = async (req, res) => {
     }
 }
 
+const getBookDetails = async (req, res) => {
+    const userId = req.user._id;
+    const bookId = req.query.bookId;
+
+    try {
+        const book = await BookModel.findOne({ owner: userId, _id: bookId });
+        if (!book) {
+            return res.status(400).json({ error: 'Book does not exist' });
+        }
+        console.log(book);
+        res.status(200).json({ book });
+
+    } catch (error) {
+        res.status(400).json({ error: error.message });
+    }
+}
+
 module.exports = {
     searchBooks,
     getUserLibrary,
     addToShelf,
     getAllBooksOnShelf,
-    updateBook
+    updateBook,
+    getBookDetails
 }
