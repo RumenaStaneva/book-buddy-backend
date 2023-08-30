@@ -115,9 +115,8 @@ const bookSchema = new Schema({
 
 bookSchema.statics.createBook = async function (data) {
 
-    const { bookApiId, owner, title, authors, description, publisher, thumbnail, categories, pageCount, notes, progress, shelf } = data;
+    const { bookApiId, owner, title, authors, description, publisher, thumbnail, category, pageCount, notes, progress, shelf } = data;
     try {
-        // Additional validation using express-validator
         await Promise.all([
             body(bookApiId).notEmpty().withMessage('Book API ID is required').trim().run(this),
             body(owner).notEmpty().withMessage('Owner ID is required').trim().run(this),
@@ -126,7 +125,7 @@ bookSchema.statics.createBook = async function (data) {
             body(description).notEmpty().withMessage('Description is required').trim().run(this),
             body(publisher).trim().run(this),
             body(thumbnail).trim().run(this),
-            body(categories).notEmpty().withMessage('Category is required').isIn(Object.values(CategoryType)).run(this),
+            body(category).notEmpty().withMessage('Category is required').isIn(Object.values(CategoryType)).run(this),
             body(pageCount).notEmpty().withMessage('Page count is required').isInt({ min: 1 }).withMessage('Page count must be a positive integer'),
             body(notes).isArray().run(this),
             body(progress).isNumeric().run(this),
@@ -137,7 +136,7 @@ bookSchema.statics.createBook = async function (data) {
         if (existingBook) {
             throw new Error('Book already exists in your shelf');
         } else {
-            const book = await this.create({ bookApiId, owner, title, authors, description, publisher, thumbnail, categories, pageCount, notes, progress, shelf })
+            const book = await this.create({ bookApiId, owner, title, authors, description, publisher, thumbnail, category, pageCount, notes, progress, shelf })
             return book;
         }
 

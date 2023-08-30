@@ -1,10 +1,6 @@
 const express = require('express');
-const { getUserLibrary, addToShelf, updateBookProgress } = require('../controllers/booksController');
+const { getUserLibrary, addToShelf, getAllBooksOnShelf, updateBook, getBookDetails } = require('../controllers/booksController');
 const requireAuth = require('../middleware/requireAuth');
-// 1
-// const multer = require('multer')
-// 2
-// const upload = multer({ dest: 'images/' })
 const router = express.Router();
 
 router.get('/', (req, res) => {
@@ -43,6 +39,9 @@ router.get('/library', getUserLibrary)
  */
 router.post('/add-to-shelf', addToShelf);
 
-router.post('/update-book-progress', updateBookProgress);
+router.get('/see-all', getAllBooksOnShelf);
+router.put('/update-book', updateBook);
+router.get('/book-details', getBookDetails)
+
 
 module.exports = router;

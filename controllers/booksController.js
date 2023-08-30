@@ -44,18 +44,7 @@ const getUserLibrary = async (req, res) => {
 }
 
 const addToShelf = async (req, res) => {
-    // console.log(req.file);
-    // console.log(req.body);
-    // console.log(req.body);
-    // const imageName = req.file.filename;
-    // console.log(imageName);
-
-    // if (!req.file && !req.body.thumbnail) {
-    //     return res.status(400).json({ error: 'Please upload a file' });
-    // }
-
     const thumbnail = req.file ? req.file.filename : req.body.thumbnail;
-
     const {
         bookApiId,
         userEmail,
@@ -63,14 +52,12 @@ const addToShelf = async (req, res) => {
         authors,
         description,
         publisher,
-        categories,
+        category,
         pageCount,
         notes,
         progress,
         shelf
     } = req.body;
-
-
     const user = await User.findOne({ email: userEmail });
     let owner;
     if (!user) {
@@ -80,46 +67,113 @@ const addToShelf = async (req, res) => {
         owner = user._id.toString();
     }
 
-
     try {
-        const book = await BookModel.createBook({ bookApiId, owner, title, authors, description, publisher, thumbnail, categories, pageCount, notes, progress, shelf });
+        const book = await BookModel.createBook({ bookApiId, owner, title, authors, description, publisher, thumbnail, category, pageCount, notes, progress, shelf });
         res.status(200).json({ book });
     } catch (error) {
         res.status(400).json({ error: error.message });
     }
 }
 
-const updateBookProgress = async (req, res) => {
+const updateBook = async (req, res) => {
     const userId = req.user._id;
-    const user = await User.findOne({ _id: userId });
-    if (user) {
-        const bookId = req.body.bookId;
-        const book = await BookModel.findOne({ owner: userId, _id: bookId });
-        if (book) {
-            const updatedProgress = req.body.progress;
-            try {
-                book.progress = updatedProgress;
-                if (book.pageCount == updatedProgress) {
-                    book.shelf = 2;
-                }
-                await book.save();
-                console.log(book);
-                res.status(200).json({ book });
-            } catch (error) {
-                res.status(400).json({ error: error.message });
-            }
-        } else {
-            res.status(400).json({ error: 'Book does not exist' });
+    const {
+        _id,
+        title,
+        authors,
+        description,
+        thumbnail,
+        category,
+        progress,
+        shelf,
+        pageCount
+    } = req.body.book;
+    try {
+        const book = await BookModel.findOne({ owner: userId, _id: _id });
+        if (!book) {
+            return res.status(400).json({ error: 'Book does not exist' });
         }
-    } else {
-        res.status(400).json({ error: 'User does not exist' });
+
+        const updatedProgress = progress;
+
+        book.progress = updatedProgress;
+
+        if (book.pageCount === updatedProgress) {
+            book.shelf = 2;
+        } else {
+            book.shelf = shelf;
+        }
+
+        book.title = title;
+        book.authors = authors;
+        book.description = description;
+        book.category = category;
+        book.pageCount = pageCount;
+        book.thumbnail = thumbnail;
+        await book.save();
+        res.status(200).json({ book });
+
+    } catch (error) {
+        res.status(400).json({ error: error.message });
+    }
+
+}
+
+const getAllBooksOnShelf = async (req, res) => {
+    const userId = req.user._id;
+    const shelf = req.query.shelf;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 5;
+    const skip = (page - 1) * limit;
+    const filterCategory = req.query.category;
+    const searchQuery = req.query.search;
+
+    try {
+        let query = { owner: userId, shelf: shelf };
+        if (filterCategory) {
+            query.category = filterCategory;
+        }
+
+        if (searchQuery) {
+            query.title = { $regex: searchQuery, $options: 'i' };
+        }
+
+        const books = await BookModel.find(query)
+            .skip(skip)
+            .limit(limit)
+            .exec();
+
+        const totalBooks = await BookModel.countDocuments(query);
+        const totalPages = Math.ceil(totalBooks / limit);
+
+        res.status(200).json({ books, totalPages });
+    } catch (error) {
+        res.status(400).json({ error: 'Error while fetching all books on shelf' });
     }
 }
 
+const getBookDetails = async (req, res) => {
+    const userId = req.user._id;
+    const bookId = req.query.bookId;
+
+    try {
+        const book = await BookModel.findOne({ owner: userId, _id: bookId });
+        if (!book) {
+            return res.status(400).json({ error: 'Book does not exist' });
+        }
+        // console.log(book);
+        res.status(200).json({ book });
+
+    } catch (error) {
+        res.status(400).json({ error: error.message });
+    }
+}
 
 module.exports = {
     searchBooks,
     getUserLibrary,
     addToShelf,
-    updateBookProgress
+    getAllBooksOnShelf,
+    updateBook,
+    getBookDetails
 }
