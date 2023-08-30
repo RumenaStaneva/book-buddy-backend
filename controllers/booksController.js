@@ -82,9 +82,11 @@ const updateBook = async (req, res) => {
         title,
         authors,
         description,
+        thumbnail,
         category,
         progress,
-        shelf
+        shelf,
+        pageCount
     } = req.body.book;
     try {
         const book = await BookModel.findOne({ owner: userId, _id: _id });
@@ -98,14 +100,17 @@ const updateBook = async (req, res) => {
 
         if (book.pageCount === updatedProgress) {
             book.shelf = 2;
+        } else {
+            book.shelf = shelf;
         }
 
         book.title = title;
         book.authors = authors;
         book.description = description;
         book.category = category;
+        book.pageCount = pageCount;
+        book.thumbnail = thumbnail;
         await book.save();
-
         res.status(200).json({ book });
 
     } catch (error) {
@@ -156,7 +161,7 @@ const getBookDetails = async (req, res) => {
         if (!book) {
             return res.status(400).json({ error: 'Book does not exist' });
         }
-        console.log(book);
+        // console.log(book);
         res.status(200).json({ book });
 
     } catch (error) {
