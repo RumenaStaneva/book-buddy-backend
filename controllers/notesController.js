@@ -39,8 +39,36 @@ const getNotes = async (req, res) => {
     }
 };
 
+const updateNote = async (req, res) => {
+    const noteId = req.query.noteId;
+    const { bookId, userId } = req.body.note;
+    const { editedNoteText } = req.body;
+
+    try {
+        const book = await BookModel.findOne({ owner: userId, _id: bookId });
+        if (!book) {
+            return res.status(400).json({ error: 'Book does not exist' });
+        }
+
+        const editedNote = await NoteModel.findOneAndUpdate(
+            { _id: noteId },
+            { noteText: editedNoteText },
+            { new: true }
+        );
+        if (editedNote) {
+            res.status(200).json({ editedNote });
+        }
+
+    } catch (error) {
+        res.status(400).json({ error: 'Error while editing note' });
+
+    }
+}
+
+
 
 module.exports = {
     createNote,
-    getNotes
+    getNotes,
+    updateNote
 }
