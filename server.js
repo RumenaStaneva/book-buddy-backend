@@ -5,6 +5,7 @@ var cors = require('cors');
 const bookRoutes = require('./routes/books');
 const userRoutes = require('./routes/user');
 const apiRoutes = require('./routes/api');
+const noteRoutes = require('./routes/notes');
 const mongoose = require('mongoose');
 
 const swaggerUi = require('swagger-ui-express');
@@ -32,6 +33,7 @@ app.use((req, res, next) => {
 app.use('/users', userRoutes);
 app.use('/api', apiRoutes);
 app.use('/books', bookRoutes);
+app.use('/notes', noteRoutes);
 
 mongoose.connect(MONGO_URI)
     .then(() => {

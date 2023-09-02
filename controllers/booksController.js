@@ -175,5 +175,6 @@ module.exports = {
     addToShelf,
     getAllBooksOnShelf,
     updateBook,
-    getBookDetails
+    getBookDetails,
+
 }
