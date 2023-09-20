@@ -4,7 +4,7 @@ const requireAuth = require('../middleware/requireAuth');
 
 
 const router = express.Router();
-router.get('/verify', verifyUser);
+router.get('/verify/:token', verifyUser);
 
 /**
  * @swagger

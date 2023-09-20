@@ -57,11 +57,8 @@ const signUpAdmin = async (req, res) => {
 
 }
 
-//todo not working
 const verifyUser = async (req, res) => {
-    console.log('jdsbdvhjsavbfdashzbfilsbhzdrfgldszfvhkdshfjdsvhkgjf');
     const { token } = req.params;
-    console.log('verifyUser s', token);
     try {
         // Find the user with the matching email
         const user = await User.findOneAndUpdate(
@@ -75,11 +72,9 @@ const verifyUser = async (req, res) => {
         }
         const jwtToken = createToken(user._id);
 
-        // Redirect the user to a success page or send a success response
         res.status(200).json({ message: 'Email verification successful.', token: jwtToken, user: user });
     } catch (error) {
         console.error(error);
-        console.log('errrrrrrrrrrr', error);
         res.status(500).json({ error: 'Internal server error' });
     }
 }
