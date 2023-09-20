@@ -30,15 +30,15 @@ const signUpUser = async (req, res) => {
 
     try {
         const user = await User.signup(email, password, isAdmin, bio, username);
-
-        const token = createToken(user._id);
-        res.status(200).json({ email, token, username });
+        // console.log('user ', user);
+        res.status(200).json(null);
     } catch (error) {
         res.status(400).json({ error: error.message });
     }
 
 }
 
+//todo add email vefification
 const signUpAdmin = async (req, res) => {
     const { email, password } = req.body;
     const isAdmin = true;
@@ -47,12 +47,41 @@ const signUpAdmin = async (req, res) => {
 
     try {
         const userAdmin = await User.signup(email, password, isAdmin, bio, username);
-        const token = createToken(userAdmin._id);
-        res.status(200).json({ email, token, username });
+        // const token = createToken(userAdmin._id);
+        // res.status(200).json({ email, token, username });
+        console.log('user ', userAdmin);
+        res.status(200).json({ message: 'User admin registered successfully. Please check your email for verification.' });
     } catch (error) {
         res.status(400).json({ error: error.message });
     }
 
+}
+
+//todo not working
+const verifyUser = async (req, res) => {
+    console.log('jdsbdvhjsavbfdashzbfilsbhzdrfgldszfvhkdshfjdsvhkgjf');
+    const { token } = req.params;
+    console.log('verifyUser s', token);
+    try {
+        // Find the user with the matching email
+        const user = await User.findOneAndUpdate(
+            { verificationToken: token, isVerified: false },
+            { isVerified: true },
+            { new: true }
+        );
+        console.log('verifyUser user', user);
+        if (!user) {
+            return res.status(404).json({ error: 'Invalid token or user is already verified' });
+        }
+        const jwtToken = createToken(user._id);
+
+        // Redirect the user to a success page or send a success response
+        res.status(200).json({ message: 'Email verification successful.', token: jwtToken, user: user });
+    } catch (error) {
+        console.error(error);
+        console.log('errrrrrrrrrrr', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
 }
 
 const getProfile = async (req, res) => {
@@ -96,4 +125,5 @@ module.exports = {
     signUpAdmin,
     getProfile,
     updateProfile,
+    verifyUser
 }

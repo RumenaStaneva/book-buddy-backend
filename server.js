@@ -7,6 +7,8 @@ const userRoutes = require('./routes/user');
 const apiRoutes = require('./routes/api');
 const noteRoutes = require('./routes/notes');
 const mongoose = require('mongoose');
+const { verifyUser } = require('./controllers/userController');
+
 
 const swaggerUi = require('swagger-ui-express');
 const swaggerSpec = require('./swagger.js');

@@ -1,8 +1,8 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 const validator = require('validator');
-
 const Schema = mongoose.Schema;
+const { generateVerificationToken, sendVerificationEmail } = require('../utils/email')
 
 /**
  * @swagger
@@ -45,6 +45,13 @@ const userSchema = new Schema({
     },
     username: {
         type: String
+    },
+    isVerified: {
+        type: Boolean,
+        default: false
+    },
+    verificationToken: {
+        type: String
     }
 });
 
@@ -67,9 +74,16 @@ userSchema.statics.signup = async function (email, password, isAdmin, bio, usern
     }
 
     const salt = await bcrypt.genSalt(10)
-    const hash = await bcrypt.hash(password, salt)
+    const hash = await bcrypt.hash(password, salt);
 
-    const user = await this.create({ email, password: hash, isAdmin, bio, username })
+    const verificationToken = generateVerificationToken(); // Generate a verification token
+    // console.log(verificationToken);
+
+    // Send the verification email with the token included in the link
+    await sendVerificationEmail(email, verificationToken);
+
+    // const user = { email, password: hash, isAdmin, bio, username }
+    const user = await this.create({ email, password: hash, isAdmin, bio, username, verificationToken })
 
     return user;
 };
