@@ -1,4 +1,7 @@
 const nodemailer = require('nodemailer');
+const fs = require('fs');
+const ejs = require('ejs');
+const path = require('path');
 require('dotenv').config();
 
 const createTransporter = () => {
@@ -17,12 +20,24 @@ const createTransporter = () => {
 
 const sendVerificationEmail = async (email, verificationToken) => {
     const transporter = createTransporter();
+    // const htmlTemplate = fs.readFileSync('./../email/templates/confirmation_email.html', 'utf8');
+    // const templatePath = '../emailTemplates/confirmation_email.ejs'; // Path to the EJS template
+    const templatePath = path.join(__dirname, '..', 'emailTemplates', 'confirmation_email.ejs');
+
+
+    // Read the EJS template file
+    const template = fs.readFileSync(templatePath, 'utf8');
+
+    // Compile the EJS template with dynamic data
+    const emailContent = ejs.render(template, {
+        verificationUrl: `${process.env.VERIFICATION_URL}/${verificationToken}` // Pass dynamic data here
+    });
 
     const mailOptions = {
         from: process.env.EMAIL,
         to: email,
         subject: 'Account Verification',
-        text: `Please click on the following link to verify your account: ${process.env.VERIFICATION_URL}/${verificationToken}`,
+        html: emailContent //${process.env.VERIFICATION_URL}/${verificationToken}
     };
 
     await transporter.sendMail(mailOptions);
