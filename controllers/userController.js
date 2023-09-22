@@ -12,9 +12,10 @@ const loginUser = async (req, res) => {
     try {
         const user = await User.login(email, password);
         const username = user.username;
+        const isVerified = user.isVerified;
         if (user) {
             const token = createToken(user._id);
-            res.status(200).json({ email, token, username });
+            res.status(200).json({ email, token, username, isVerified });
         }
     } catch (error) {
         res.status(400).json({ error: error.message });
@@ -60,19 +61,16 @@ const signUpAdmin = async (req, res) => {
 const verifyUser = async (req, res) => {
     const { token } = req.params;
     try {
-        // Find the user with the matching email
         const user = await User.findOneAndUpdate(
-            { verificationToken: token, isVerified: false },
+            { verificationToken: token },
             { isVerified: true },
             { new: true }
         );
-        console.log('verifyUser user', user);
         if (!user) {
             return res.status(404).json({ error: 'Invalid token or user is already verified' });
         }
-        const jwtToken = createToken(user._id);
 
-        res.status(200).json({ message: 'Email verification successful.', token: jwtToken, user: user });
+        res.status(200).json({ message: 'Email verification successful.' });
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Internal server error' });
