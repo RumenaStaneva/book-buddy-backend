@@ -18,7 +18,7 @@ const createTransporter = () => {
     });
 }
 
-const sendVerificationEmail = async (email, verificationToken) => {
+const sendVerificationEmail = async (email, verificationToken, username) => {
     const transporter = createTransporter();
     // const htmlTemplate = fs.readFileSync('./../email/templates/confirmation_email.html', 'utf8');
     // const templatePath = '../emailTemplates/confirmation_email.ejs'; // Path to the EJS template
@@ -30,7 +30,8 @@ const sendVerificationEmail = async (email, verificationToken) => {
 
     // Compile the EJS template with dynamic data
     const emailContent = ejs.render(template, {
-        verificationUrl: `${process.env.VERIFICATION_URL}/${verificationToken}` // Pass dynamic data here
+        verificationUrl: `${process.env.VERIFICATION_URL}/${verificationToken}`,
+        username: username
     });
 
     const mailOptions = {

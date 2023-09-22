@@ -44,7 +44,8 @@ const userSchema = new Schema({
         type: String
     },
     username: {
-        type: String
+        type: String,
+        required: true,
     },
     isVerified: {
         type: Boolean,
@@ -58,7 +59,7 @@ const userSchema = new Schema({
 //static signup method for users
 userSchema.statics.signup = async function (email, password, isAdmin, bio, username) {
     //validation
-    if (!email || !password) {
+    if (!email || !password || !username) {
         throw Error('All fields must be filled');
     }
     if (!validator.isEmail(email)) {
@@ -68,22 +69,23 @@ userSchema.statics.signup = async function (email, password, isAdmin, bio, usern
         throw Error('Password not strong enough');
     }
 
-    const exists = await this.findOne({ email })
-    if (exists) {
+    const existsEmail = await this.findOne({ email })
+    if (existsEmail) {
         throw Error('Email already in use')
+    }
+
+    const usernameExists = await this.findOne({ username });
+    if (usernameExists) {
+        throw Error('Username already in use');
     }
 
     const salt = await bcrypt.genSalt(10)
     const hash = await bcrypt.hash(password, salt);
+    const verificationToken = generateVerificationToken();
 
-    const verificationToken = generateVerificationToken(); // Generate a verification token
-    // console.log(verificationToken);
+    await sendVerificationEmail(email, verificationToken, username);
 
-    // Send the verification email with the token included in the link
-    await sendVerificationEmail(email, verificationToken);
-
-    // const user = { email, password: hash, isAdmin, bio, username }
-    const user = await this.create({ email, password: hash, isAdmin, bio, username, verificationToken })
+    const user = await this.create({ email, password: hash, isAdmin, bio, username, verificationToken });
 
     return user;
 };
