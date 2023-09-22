@@ -169,6 +169,16 @@ const getBookDetails = async (req, res) => {
     }
 }
 
+const deleteBook = async (req, res) => {
+    const bookId = req.query.bookId;
+    try {
+        const deletedBook = await BookModel.findByIdAndDelete(bookId);
+        res.status(200).json({ message: 'Book deleted succesfuly', deletedBook });
+    } catch (error) {
+        res.status(400).json({ error: 'Error while deleting book' });
+    }
+}
+
 module.exports = {
     searchBooks,
     getUserLibrary,
@@ -176,5 +186,5 @@ module.exports = {
     getAllBooksOnShelf,
     updateBook,
     getBookDetails,
-
+    deleteBook,
 }

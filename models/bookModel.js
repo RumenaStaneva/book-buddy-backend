@@ -71,7 +71,7 @@ const bookSchema = new Schema({
     },
     title: {
         type: String,
-        required: true,
+        default: 'No author/s'
     },
     authors: {
         type: Array,
@@ -120,7 +120,7 @@ bookSchema.statics.createBook = async function (data) {
         await Promise.all([
             body(bookApiId).notEmpty().withMessage('Book API ID is required').trim().run(this),
             body(owner).notEmpty().withMessage('Owner ID is required').trim().run(this),
-            body(title).notEmpty().withMessage('Title is required').trim().run(this),
+            body(title).trim().run(this),
             body(authors).notEmpty().withMessage('Authors are required').isArray().run(this),
             body(description).notEmpty().withMessage('Description is required').trim().run(this),
             body(publisher).trim().run(this),
