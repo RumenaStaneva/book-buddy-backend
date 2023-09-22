@@ -1,8 +1,8 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 const validator = require('validator');
-
 const Schema = mongoose.Schema;
+const { generateVerificationToken, sendVerificationEmail } = require('../utils/email')
 
 /**
  * @swagger
@@ -44,6 +44,14 @@ const userSchema = new Schema({
         type: String
     },
     username: {
+        type: String,
+        required: true,
+    },
+    isVerified: {
+        type: Boolean,
+        default: false
+    },
+    verificationToken: {
         type: String
     }
 });
@@ -51,7 +59,7 @@ const userSchema = new Schema({
 //static signup method for users
 userSchema.statics.signup = async function (email, password, isAdmin, bio, username) {
     //validation
-    if (!email || !password) {
+    if (!email || !password || !username) {
         throw Error('All fields must be filled');
     }
     if (!validator.isEmail(email)) {
@@ -61,29 +69,46 @@ userSchema.statics.signup = async function (email, password, isAdmin, bio, usern
         throw Error('Password not strong enough');
     }
 
-    const exists = await this.findOne({ email })
-    if (exists) {
+    const existsEmail = await this.findOne({ email })
+    if (existsEmail) {
         throw Error('Email already in use')
     }
 
-    const salt = await bcrypt.genSalt(10)
-    const hash = await bcrypt.hash(password, salt)
+    const usernameExists = await this.findOne({ username });
+    if (usernameExists) {
+        throw Error('Username already in use');
+    }
 
-    const user = await this.create({ email, password: hash, isAdmin, bio, username })
+    const salt = await bcrypt.genSalt(10)
+    const hash = await bcrypt.hash(password, salt);
+    const verificationToken = generateVerificationToken();
+
+    await sendVerificationEmail(email, verificationToken, username);
+
+    const user = await this.create({ email, password: hash, isAdmin, bio, username, verificationToken });
 
     return user;
 };
 
 //static login method for users
-userSchema.statics.login = async function (email, password) {
+userSchema.statics.login = async function (emailOrUsername, password) {
     //validation
-    if (!email || !password) {
+    if (!emailOrUsername || !password) {
         throw Error('All fields must be filled');
     }
 
-    const user = await this.findOne({ email })
+    const isEmail = validator.isEmail(emailOrUsername);
+
+    // Define a query object to search by either email or username
+    const query = isEmail ? { email: emailOrUsername } : { username: emailOrUsername };
+
+    const user = await this.findOne(query)
     if (!user) {
         throw Error('Invalid login credentials!');
+    }
+
+    if (!user.isVerified) {
+        throw Error('User is not verified, please check your email for verification link or contact support.');
     }
 
     const match = await bcrypt.compare(password, user.password);

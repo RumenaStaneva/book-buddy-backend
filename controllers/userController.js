@@ -8,13 +8,15 @@ const createToken = (_id) => {
 }
 
 const loginUser = async (req, res) => {
-    const { email, password } = req.body;
+    const { emailOrUsername, password } = req.body;
     try {
-        const user = await User.login(email, password);
+        const user = await User.login(emailOrUsername, password);
+        const email = user.email;
         const username = user.username;
+        const isVerified = user.isVerified;
         if (user) {
             const token = createToken(user._id);
-            res.status(200).json({ email, token, username });
+            res.status(200).json({ email, token, username, isVerified });
         }
     } catch (error) {
         res.status(400).json({ error: error.message });
@@ -23,16 +25,13 @@ const loginUser = async (req, res) => {
 }
 
 const signUpUser = async (req, res) => {
-    const { email, password } = req.body;
+    const { email, password, username } = req.body;
     const isAdmin = false;
     const bio = '';
-    const username = '';
 
     try {
         const user = await User.signup(email, password, isAdmin, bio, username);
-
-        const token = createToken(user._id);
-        res.status(200).json({ email, token, username });
+        res.status(200).json(null);
     } catch (error) {
         res.status(400).json({ error: error.message });
     }
@@ -47,12 +46,30 @@ const signUpAdmin = async (req, res) => {
 
     try {
         const userAdmin = await User.signup(email, password, isAdmin, bio, username);
-        const token = createToken(userAdmin._id);
-        res.status(200).json({ email, token, username });
+        res.status(200).json({ message: 'User admin registered successfully. Please check your email for verification.' });
     } catch (error) {
         res.status(400).json({ error: error.message });
     }
 
+}
+
+const verifyUser = async (req, res) => {
+    const { token } = req.params;
+    try {
+        const user = await User.findOneAndUpdate(
+            { verificationToken: token },
+            { isVerified: true },
+            { new: true }
+        );
+        if (!user) {
+            return res.status(404).json({ error: 'Invalid token or user is already verified' });
+        }
+
+        res.status(200).json({ message: 'Email verification successful.' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
 }
 
 const getProfile = async (req, res) => {
@@ -73,6 +90,12 @@ const getProfile = async (req, res) => {
 const updateProfile = async (req, res) => {
     const { bio, username } = req.body;
     const userId = req.user._id;
+
+    const existingUser = await User.findOne({ username });
+    if (existingUser && existingUser._id.toString() !== userId) {
+        return res.status(400).json({ error: 'Username is already in use' });
+    }
+
     try {
         const updatedProfile = await User.findOneAndUpdate(
             { _id: userId },
@@ -96,4 +119,5 @@ module.exports = {
     signUpAdmin,
     getProfile,
     updateProfile,
+    verifyUser
 }

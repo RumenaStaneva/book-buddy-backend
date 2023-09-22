@@ -1,9 +1,10 @@
 const express = require('express');
-const { loginUser, signUpUser, signUpAdmin, getProfile, updateProfile } = require('../controllers/userController');
+const { loginUser, signUpUser, signUpAdmin, getProfile, updateProfile, verifyUser } = require('../controllers/userController');
 const requireAuth = require('../middleware/requireAuth');
 
 
 const router = express.Router();
+router.get('/verify/:token', verifyUser);
 
 /**
  * @swagger
@@ -131,6 +132,8 @@ router.post('/sign-up', signUpUser);
  *         description: Internal server error
  */
 router.post('/sign-up-admin', signUpAdmin);
+
+
 
 router.use(requireAuth);
 router.get('/profile', getProfile);

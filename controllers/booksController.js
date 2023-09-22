@@ -161,7 +161,6 @@ const getBookDetails = async (req, res) => {
         if (!book) {
             return res.status(400).json({ error: 'Book does not exist' });
         }
-        // console.log(book);
         res.status(200).json({ book });
 
     } catch (error) {
