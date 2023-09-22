@@ -8,9 +8,10 @@ const createToken = (_id) => {
 }
 
 const loginUser = async (req, res) => {
-    const { email, password } = req.body;
+    const { emailOrUsername, password } = req.body;
     try {
-        const user = await User.login(email, password);
+        const user = await User.login(emailOrUsername, password);
+        const email = user.email;
         const username = user.username;
         const isVerified = user.isVerified;
         if (user) {
@@ -37,7 +38,6 @@ const signUpUser = async (req, res) => {
 
 }
 
-//todo add email vefification
 const signUpAdmin = async (req, res) => {
     const { email, password } = req.body;
     const isAdmin = true;
@@ -46,9 +46,6 @@ const signUpAdmin = async (req, res) => {
 
     try {
         const userAdmin = await User.signup(email, password, isAdmin, bio, username);
-        // const token = createToken(userAdmin._id);
-        // res.status(200).json({ email, token, username });
-        console.log('user ', userAdmin);
         res.status(200).json({ message: 'User admin registered successfully. Please check your email for verification.' });
     } catch (error) {
         res.status(400).json({ error: error.message });
@@ -93,6 +90,12 @@ const getProfile = async (req, res) => {
 const updateProfile = async (req, res) => {
     const { bio, username } = req.body;
     const userId = req.user._id;
+
+    const existingUser = await User.findOne({ username });
+    if (existingUser && existingUser._id.toString() !== userId) {
+        return res.status(400).json({ error: 'Username is already in use' });
+    }
+
     try {
         const updatedProfile = await User.findOneAndUpdate(
             { _id: userId },

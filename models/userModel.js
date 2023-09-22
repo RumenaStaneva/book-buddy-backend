@@ -91,13 +91,18 @@ userSchema.statics.signup = async function (email, password, isAdmin, bio, usern
 };
 
 //static login method for users
-userSchema.statics.login = async function (email, password) {
+userSchema.statics.login = async function (emailOrUsername, password) {
     //validation
-    if (!email || !password) {
+    if (!emailOrUsername || !password) {
         throw Error('All fields must be filled');
     }
 
-    const user = await this.findOne({ email })
+    const isEmail = validator.isEmail(emailOrUsername);
+
+    // Define a query object to search by either email or username
+    const query = isEmail ? { email: emailOrUsername } : { username: emailOrUsername };
+
+    const user = await this.findOne(query)
     if (!user) {
         throw Error('Invalid login credentials!');
     }
