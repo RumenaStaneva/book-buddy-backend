@@ -52,7 +52,6 @@ const generateVerificationToken = (length = 32) => {
 }
 
 const resetPasswordEmail = async (email, resetToken) => {
-    console.log('gcjgfctyjcgjy');
     const transporter = createTransporter();
     const templatePath = path.join(__dirname, '..', 'emailTemplates', 'reset_password_email.ejs');
 
