@@ -1,6 +1,8 @@
 const User = require('../models/userModel');
 const jwt = require('jsonwebtoken');
 const SECRET = process.env.SECRET;
+const { generateVerificationToken, resetPasswordEmail } = require('../utils/email');
+const { generateRandomPassword, hashPassword } = require('../utils/password');
 
 //_id of mongodb
 const createToken = (_id) => {
@@ -113,11 +115,71 @@ const updateProfile = async (req, res) => {
     }
 }
 
+const forgotPassword = async (req, res) => {
+    const { email } = req.body;
+    try {
+        const resetToken = generateVerificationToken();
+
+        const resetTokenExpiry = new Date().getTime() + 60 * 60 * 1000;
+        const user = await User.findOneAndUpdate(
+            { email },
+            {
+                resetToken,
+                resetTokenExpiry: new Date(resetTokenExpiry)
+            },
+            { new: true }
+        );
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        };
+        const newPassword = generateRandomPassword();
+        const hashedPassword = await hashPassword(newPassword);
+
+        user.password = hashedPassword;
+        await user.save();
+
+        resetPasswordEmail(email, resetToken);
+        res.status(200).json({ message: 'Email with link sent' })
+    } catch (error) {
+        console.error('Error resetting password:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+}
+
+const resetPassword = async (req, res) => {
+    try {
+        const { token } = req.params;
+        const { newPassword } = req.body;
+        const user = await User.findOne({
+            resetToken: token,
+            resetTokenExpiry: { $gt: new Date() },
+        });
+
+        if (!user) {
+            return res.status(404).json({ error: 'Invalid or expired reset token.' });
+        }
+
+        const hashedPassword = await hashPassword(newPassword);
+
+        user.password = hashedPassword;
+        user.resetToken = undefined;
+        user.resetTokenExpiry = undefined;
+        await user.save();
+
+        res.status(200).json({ message: 'Password reset successful' });
+    } catch (error) {
+        console.error('Error resetting password:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+};
+
 module.exports = {
     loginUser,
     signUpUser,
     signUpAdmin,
     getProfile,
     updateProfile,
-    verifyUser
+    verifyUser,
+    forgotPassword,
+    resetPassword
 }

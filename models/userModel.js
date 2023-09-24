@@ -52,7 +52,16 @@ const userSchema = new Schema({
         default: false
     },
     verificationToken: {
-        type: String
+        type: String,
+        default: null
+    },
+    resetToken: {
+        type: String,
+        default: null,
+    },
+    resetTokenExpiry: {
+        type: Date,
+        default: null,
     }
 });
 
