@@ -57,14 +57,18 @@ const signUpAdmin = async (req, res) => {
 
 const verifyUser = async (req, res) => {
     const { token } = req.params;
+
     try {
         const user = await User.findOneAndUpdate(
-            { verificationToken: token },
+            {
+                verificationToken: token,
+                verificationTokenExpiry: { $gt: new Date() },
+            },
             { isVerified: true },
             { new: true }
         );
         if (!user) {
-            return res.status(404).json({ error: 'Invalid token or user is already verified' });
+            return res.status(404).json({ error: 'Invalid/expired token or user is already verified' });
         }
 
         res.status(200).json({ message: 'Email verification successful.' });
