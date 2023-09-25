@@ -5,25 +5,23 @@ const { cleanExpiredVerificationTokens, cleanExpiredResetTokens } = require('./u
 async function verificationTokensExist() {
     //check if there are users with a non-null verificationToken
     const usersWithVerificationTokens = await User.countDocuments({ verificationToken: { $ne: null } });
-
     return usersWithVerificationTokens > 0;
 }
 
 async function resetTokensExist() {
     // check if there are users with a non-null resetToken
     const usersWithResetTokens = await User.countDocuments({ resetToken: { $ne: null } });
-
     return usersWithResetTokens > 0; // Return true if there are tokens, otherwise false
 }
 
-const verificationTokenCleanupJob = new cron.schedule('0 * * * *', async () => {
+const verificationTokenCleanupJob = new cron.schedule('0 0 * * *', async () => {
     const verificationTokenExist = await verificationTokensExist();
     if (verificationTokenExist) {
         cleanExpiredVerificationTokens();
     }
 });
 
-const resetTokenCleanupJob = new cron.schedule('30 * * * *', async () => {
+const resetTokenCleanupJob = new cron.schedule('0 0 * * *', async () => {
     const resetTokenExist = await resetTokensExist();
     if (resetTokenExist) {
         cleanExpiredResetTokens();
@@ -44,3 +42,5 @@ const resetTokenCleanupJob = new cron.schedule('30 * * * *', async () => {
         resetTokenCleanupJob.start();
     }
 })();
+
+module.exports = { verificationTokenCleanupJob, resetTokenCleanupJob };

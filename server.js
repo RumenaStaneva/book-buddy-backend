@@ -9,7 +9,6 @@ const noteRoutes = require('./routes/notes');
 const tokenCleanup = require('./tokenCleanup');
 const mongoose = require('mongoose');
 
-
 const swaggerUi = require('swagger-ui-express');
 const swaggerSpec = require('./swagger.js');
 

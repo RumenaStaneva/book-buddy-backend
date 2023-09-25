@@ -1,9 +1,7 @@
-// tokenUtils.js
 const User = require('../models/userModel');
 
 async function cleanExpiredVerificationTokens() {
     try {
-
         await User.updateMany(
             { verificationTokenExpiry: { $lt: new Date() } },
             { $unset: { verificationToken: null, verificationTokenExpiry: null } }
@@ -16,10 +14,9 @@ async function cleanExpiredVerificationTokens() {
 
 async function cleanExpiredResetTokens() {
     try {
-
         await User.updateMany(
             { resetTokenExpiry: { $lt: new Date() } },
-            { $unset: { resetToken: null, resetTokenExpiry: null } }
+            { $set: { resetToken: null, resetTokenExpiry: null } }
         );
         console.log('Expired reset tokens cleaned up.');
     } catch (error) {
