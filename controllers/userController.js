@@ -2,7 +2,7 @@ const User = require('../models/userModel');
 const jwt = require('jsonwebtoken');
 const SECRET = process.env.SECRET;
 const { generateVerificationToken, resetPasswordEmail } = require('../utils/email');
-const { generateRandomPassword, hashPassword } = require('../utils/password');
+const { hashPassword, comparePasswords } = require('../utils/password');
 
 //_id of mongodb
 const createToken = (_id) => {
@@ -132,11 +132,6 @@ const forgotPassword = async (req, res) => {
         if (!user) {
             return res.status(404).json({ error: 'User not found' });
         };
-        const newPassword = generateRandomPassword();
-        const hashedPassword = await hashPassword(newPassword);
-
-        user.password = hashedPassword;
-        await user.save();
 
         resetPasswordEmail(email, resetToken);
         res.status(200).json({ message: 'Email with link sent' })
@@ -157,6 +152,12 @@ const resetPassword = async (req, res) => {
 
         if (!user) {
             return res.status(404).json({ error: 'Invalid or expired reset token.' });
+        }
+
+        const isPasswordMatch = await comparePasswords(newPassword, user.password);
+
+        if (isPasswordMatch) {
+            return res.status(400).json({ error: 'New password can\'t be the same as the previous password.' });
         }
 
         const hashedPassword = await hashPassword(newPassword);

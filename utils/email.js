@@ -2,6 +2,7 @@ const nodemailer = require('nodemailer');
 const fs = require('fs');
 const ejs = require('ejs');
 const path = require('path');
+
 require('dotenv').config();
 
 const createTransporter = () => {
