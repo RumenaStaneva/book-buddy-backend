@@ -1,5 +1,5 @@
 const express = require('express');
-const { loginUser, signUpUser, signUpAdmin, getProfile, updateProfile, verifyUser } = require('../controllers/userController');
+const { loginUser, signUpUser, signUpAdmin, getProfile, updateProfile, verifyUser, forgotPassword, resetPassword } = require('../controllers/userController');
 const requireAuth = require('../middleware/requireAuth');
 
 
@@ -90,7 +90,6 @@ router.post('/login', loginUser);
  *         description: Internal server error
  */
 router.post('/sign-up', signUpUser);
-
 /**
  * @swagger
  * /api/users/sign-up-admin:
@@ -130,12 +129,14 @@ router.post('/sign-up', signUpUser);
  *               message: Email already in use
  *       '500':
  *         description: Internal server error
- */
+*/
 router.post('/sign-up-admin', signUpAdmin);
 
-
+router.post('/forgot-password', forgotPassword);
+router.post('/reset-password/:token', resetPassword);
 
 router.use(requireAuth);
+
 router.get('/profile', getProfile);
 router.patch('/update-profile-info', updateProfile);
 

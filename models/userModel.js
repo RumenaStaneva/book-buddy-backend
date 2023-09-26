@@ -52,7 +52,20 @@ const userSchema = new Schema({
         default: false
     },
     verificationToken: {
-        type: String
+        type: String,
+        default: null
+    },
+    verificationTokenExpiry: {
+        type: Date,
+        default: null,
+    },
+    resetToken: {
+        type: String,
+        default: null,
+    },
+    resetTokenExpiry: {
+        type: Date,
+        default: null,
     }
 });
 
@@ -84,8 +97,9 @@ userSchema.statics.signup = async function (email, password, isAdmin, bio, usern
     const verificationToken = generateVerificationToken();
 
     await sendVerificationEmail(email, verificationToken, username);
+    const verificationTokenExpiry = new Date().getTime() + 60 * 60 * 1000;
 
-    const user = await this.create({ email, password: hash, isAdmin, bio, username, verificationToken });
+    const user = await this.create({ email, password: hash, isAdmin, bio, username, verificationToken, verificationTokenExpiry: new Date(verificationTokenExpiry) });
 
     return user;
 };
