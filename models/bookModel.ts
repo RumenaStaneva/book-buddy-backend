@@ -138,8 +138,8 @@ const bookSchema = new Schema({
     },
     shelf: {
         type: Number,
-        required: true,
-        enum: Object.values(ShelfType),
+        // required: true,
+        // enum: Object.values(ShelfType),
         default: ShelfType.WANT_TO_READ,
     },
 });
@@ -164,6 +164,10 @@ bookSchema.statics.createBook = async function (data) {
         ]);
 
         const existingBook = await this.findOne({ bookApiId, owner })
+        console.log(shelf);
+
+
+
         if (existingBook) {
             throw new Error('Book already exists in your shelf');
         } else {

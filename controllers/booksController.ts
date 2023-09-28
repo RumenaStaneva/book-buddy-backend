@@ -1,6 +1,7 @@
-import { NextFunction, Request, Response, Router } from 'express';
+import { Request, Response, Router } from 'express';
+import axios from 'axios';
 import dotenv from 'dotenv';
-import BookModel from '../models/bookModel';
+import Book from '../models/bookModel';
 import User from '../models/userModel';
 import { IGetUserAuthInfoRequest } from '../types/express';
 dotenv.config();
@@ -11,11 +12,11 @@ const searchBooks = async (req: Request, res: Response) => {
     try {
         const { title, startIndex, maxResults } = req.body;
         const url = `https://www.googleapis.com/books/v1/volumes?q=${title}&startIndex=${startIndex}&maxResults=${maxResults}&printType=books&key=${KEY}`;
-        const response = await fetch(url);
-        if (!response.ok) {
+        const response = await axios.get(url);
+        if (response.status !== 200) {
             throw new Error(`Error fetching books: ${response.statusText}`);
         }
-        const responseData = await response.json();
+        const responseData = await response.data;
         res.json(responseData);
     } catch (error: any) {
         console.error('Error fetching books:', error.message);
@@ -28,13 +29,13 @@ const getUserLibrary = async (req: IGetUserAuthInfoRequest, res: Response) => {
     const user = await User.findOne({ _id: userId });
     if (user) {
         try {
-            const wantToReadBooks = await BookModel.find({ owner: userId, shelf: 0 })
+            const wantToReadBooks = await Book.find({ owner: userId, shelf: 0 })
                 .sort({ _id: -1 })
                 .limit(5);
-            const currntlyReadingBooks = await BookModel.find({ owner: userId, shelf: 1 })
+            const currntlyReadingBooks = await Book.find({ owner: userId, shelf: 1 })
                 .sort({ _id: -1 })
                 .limit(5);
-            const readBooks = await BookModel.find({ owner: userId, shelf: 2 })
+            const readBooks = await Book.find({ owner: userId, shelf: 2 })
                 .sort({ _id: -1 })
                 .limit(5);
             res.status(200).json({ wantToReadBooks, currntlyReadingBooks, readBooks });
@@ -62,6 +63,8 @@ const addToShelf = async (req: Request, res: Response) => {
         progress,
         shelf
     } = req.body;
+    console.log(req.body);
+
     const user = await User.findOne({ email: userEmail });
     let owner;
     if (!user) {
@@ -72,9 +75,11 @@ const addToShelf = async (req: Request, res: Response) => {
     }
 
     try {
-        const book = await BookModel.createBook({ bookApiId, owner, title, authors, description, publisher, thumbnail, category, pageCount, notes, progress, shelf });
+        const book = await Book.createBook({ bookApiId, owner, title, authors, description, publisher, thumbnail, category, pageCount, notes, progress, shelf });
         res.status(200).json({ book });
     } catch (error: any) {
+        console.log(error.message);
+
         res.status(400).json({ error: error.message });
     }
 }
@@ -93,7 +98,7 @@ const updateBook = async (req: IGetUserAuthInfoRequest, res: Response) => {
         pageCount
     } = req.body.book;
     try {
-        const book = await BookModel.findOne({ owner: userId, _id: _id });
+        const book = await Book.findOne({ owner: userId, _id: _id });
         if (!book) {
             return res.status(400).json({ error: 'Book does not exist' });
         }
@@ -142,12 +147,12 @@ const getAllBooksOnShelf = async (req: IGetUserAuthInfoRequest, res: Response) =
             query.title = { $regex: searchQuery, $options: 'i' };
         }
 
-        const books = await BookModel.find(query)
+        const books = await Book.find(query)
             .skip(skip)
             .limit(limit)
             .exec();
 
-        const totalBooks = await BookModel.countDocuments(query);
+        const totalBooks = await Book.countDocuments(query);
         const totalPages = Math.ceil(totalBooks / limit);
 
         res.status(200).json({ books, totalPages });
@@ -161,7 +166,7 @@ const getBookDetails = async (req: IGetUserAuthInfoRequest, res: Response) => {
     const bookId = req.query.bookId;
 
     try {
-        const book = await BookModel.findOne({ owner: userId, _id: bookId });
+        const book = await Book.findOne({ owner: userId, _id: bookId });
         if (!book) {
             return res.status(400).json({ error: 'Book does not exist' });
         }
@@ -175,7 +180,7 @@ const getBookDetails = async (req: IGetUserAuthInfoRequest, res: Response) => {
 const deleteBook = async (req: Request, res: Response) => {
     const bookId = req.query.bookId;
     try {
-        const deletedBook = await BookModel.findByIdAndDelete(bookId);
+        const deletedBook = await Book.findByIdAndDelete(bookId);
         res.status(200).json({ message: 'Book deleted succesfuly', deletedBook });
     } catch (error) {
         res.status(400).json({ error: 'Error while deleting book' });
