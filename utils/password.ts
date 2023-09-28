@@ -1,6 +1,6 @@
-const crypto = require('crypto');
-const bcrypt = require('bcrypt');
-const validator = require('validator');
+import crypto from 'crypto';
+import bcrypt from 'bcrypt';
+import validator from 'validator';
 
 
 const generateRandomPassword = () => {
@@ -18,7 +18,7 @@ const generateRandomPassword = () => {
     return password;
 };
 
-const hashPassword = async (password) => {
+const hashPassword = async (password: string) => {
     if (!validator.isStrongPassword(password)) {
         throw Error('Password not strong enough');
     }
@@ -29,7 +29,7 @@ const hashPassword = async (password) => {
     return hash;
 }
 
-const comparePasswords = async (newPassword, storedHashedPassword) => {
+const comparePasswords = async (newPassword: string, storedHashedPassword: string) => {
     try {
         const isMatch = await bcrypt.compare(newPassword, storedHashedPassword);
         return isMatch;
@@ -39,4 +39,4 @@ const comparePasswords = async (newPassword, storedHashedPassword) => {
     }
 };
 
-module.exports = { generateRandomPassword, hashPassword, comparePasswords };
+export { generateRandomPassword, hashPassword, comparePasswords };

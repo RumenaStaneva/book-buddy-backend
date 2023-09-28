@@ -1,15 +1,17 @@
-const User = require('../models/userModel');
-const jwt = require('jsonwebtoken');
-const SECRET = process.env.SECRET;
-const { generateVerificationToken, resetPasswordEmail } = require('../utils/email');
-const { hashPassword, comparePasswords } = require('../utils/password');
+import { NextFunction, Request, Response, Router } from 'express';
 
+import User from '../models/userModel';
+import jwt, { JwtPayload } from 'jsonwebtoken';
+const SECRET: string = process.env.SECRET || '';
+import { generateVerificationToken, resetPasswordEmail } from '../utils/email';
+import { hashPassword, comparePasswords } from '../utils/password';
+import { IGetUserAuthInfoRequest } from '../types/express';
 //_id of mongodb
-const createToken = (_id) => {
+const createToken = (_id: string): string => {
     return jwt.sign({ _id }, SECRET, { expiresIn: '3d' })
 }
 
-const loginUser = async (req, res) => {
+const loginUser = async (req: Request, res: Response) => {
     const { emailOrUsername, password } = req.body;
     try {
         const user = await User.login(emailOrUsername, password);
@@ -20,13 +22,13 @@ const loginUser = async (req, res) => {
             const token = createToken(user._id);
             res.status(200).json({ email, token, username, isVerified });
         }
-    } catch (error) {
+    } catch (error: any) {
         res.status(400).json({ error: error.message });
     }
 
 }
 
-const signUpUser = async (req, res) => {
+const signUpUser = async (req: Request, res: Response) => {
     const { email, password, username } = req.body;
     const isAdmin = false;
     const bio = '';
@@ -34,13 +36,13 @@ const signUpUser = async (req, res) => {
     try {
         const user = await User.signup(email, password, isAdmin, bio, username);
         res.status(200).json(null);
-    } catch (error) {
+    } catch (error: any) {
         res.status(400).json({ error: error.message });
     }
 
 }
 
-const signUpAdmin = async (req, res) => {
+const signUpAdmin = async (req: Request, res: Response) => {
     const { email, password } = req.body;
     const isAdmin = true;
     const bio = '';
@@ -49,13 +51,13 @@ const signUpAdmin = async (req, res) => {
     try {
         const userAdmin = await User.signup(email, password, isAdmin, bio, username);
         res.status(200).json({ message: 'User admin registered successfully. Please check your email for verification.' });
-    } catch (error) {
+    } catch (error: any) {
         res.status(400).json({ error: error.message });
     }
 
 }
 
-const verifyUser = async (req, res) => {
+const verifyUser = async (req: Request, res: Response) => {
     const { token } = req.params;
 
     try {
@@ -78,8 +80,8 @@ const verifyUser = async (req, res) => {
     }
 }
 
-const getProfile = async (req, res) => {
-    const userId = req.user._id;
+const getProfile = async (req: IGetUserAuthInfoRequest, res: Response) => {
+    const userId = req.user?._id;
     const userProfile = await User.findOne({ _id: userId })
 
     try {
@@ -88,14 +90,14 @@ const getProfile = async (req, res) => {
         } else {
             res.status(404).json({ error: 'User profile not found' });
         }
-    } catch (error) {
+    } catch (error: any) {
         res.status(400).json({ error: error.message });
     }
 }
 
-const updateProfile = async (req, res) => {
+const updateProfile = async (req: IGetUserAuthInfoRequest, res: Response) => {
     const { bio, username } = req.body;
-    const userId = req.user._id;
+    const userId = req.user?._id;
 
     const existingUser = await User.findOne({ username });
     if (existingUser && existingUser._id.toString() !== userId) {
@@ -114,12 +116,12 @@ const updateProfile = async (req, res) => {
         } else {
             res.status(404).json({ error: 'User profile not found' });
         }
-    } catch (error) {
+    } catch (error: any) {
         res.status(400).json({ error: error.message });
     }
 }
 
-const forgotPassword = async (req, res) => {
+const forgotPassword = async (req: Request, res: Response) => {
     const { email } = req.body;
     try {
         const resetToken = generateVerificationToken();
@@ -145,7 +147,7 @@ const forgotPassword = async (req, res) => {
     }
 }
 
-const resetPassword = async (req, res) => {
+const resetPassword = async (req: Request, res: Response) => {
     try {
         const { token } = req.params;
         const { newPassword } = req.body;
@@ -167,8 +169,8 @@ const resetPassword = async (req, res) => {
         const hashedPassword = await hashPassword(newPassword);
 
         user.password = hashedPassword;
-        user.resetToken = undefined;
-        user.resetTokenExpiry = undefined;
+        user.resetToken = null;
+        user.resetTokenExpiry = null;
         await user.save();
 
         res.status(200).json({ message: 'Password reset successful' });
@@ -178,7 +180,7 @@ const resetPassword = async (req, res) => {
     }
 };
 
-module.exports = {
+export {
     loginUser,
     signUpUser,
     signUpAdmin,

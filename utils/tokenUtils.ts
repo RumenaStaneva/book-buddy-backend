@@ -1,4 +1,4 @@
-const User = require('../models/userModel');
+import User from '../models/userModel';
 
 async function cleanExpiredVerificationTokens() {
     try {
@@ -24,4 +24,4 @@ async function cleanExpiredResetTokens() {
     }
 }
 
-module.exports = { cleanExpiredVerificationTokens, cleanExpiredResetTokens };
+export { cleanExpiredVerificationTokens, cleanExpiredResetTokens };

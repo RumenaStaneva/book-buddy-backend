@@ -1,27 +1,30 @@
-const axios = require('axios');
-const dotenv = require('dotenv');
-const BookModel = require('../models/bookModel');
-const User = require('../models/userModel');
-
+import { NextFunction, Request, Response, Router } from 'express';
+import dotenv from 'dotenv';
+import BookModel from '../models/bookModel';
+import User from '../models/userModel';
+import { IGetUserAuthInfoRequest } from '../types/express';
 dotenv.config();
 
-let KEY = process.env.KEY
+let KEY = process.env.KEY;
 
-const searchBooks = async (req, res, next) => {
+const searchBooks = async (req: Request, res: Response) => {
     try {
         const { title, startIndex, maxResults } = req.body;
         const url = `https://www.googleapis.com/books/v1/volumes?q=${title}&startIndex=${startIndex}&maxResults=${maxResults}&printType=books&key=${KEY}`;
-        const response = await axios.get(url);
-        res.json(response.data);
-
-    } catch (error) {
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error(`Error fetching books: ${response.statusText}`);
+        }
+        const responseData = await response.json();
+        res.json(responseData);
+    } catch (error: any) {
         console.error('Error fetching books:', error.message);
         res.status(500).json({ error: 'Error fetching books from the Google Books API' });
     }
 }
 
-const getUserLibrary = async (req, res) => {
-    const userId = req.user._id;
+const getUserLibrary = async (req: IGetUserAuthInfoRequest, res: Response) => {
+    const userId = req.user?._id;
     const user = await User.findOne({ _id: userId });
     if (user) {
         try {
@@ -35,7 +38,7 @@ const getUserLibrary = async (req, res) => {
                 .sort({ _id: -1 })
                 .limit(5);
             res.status(200).json({ wantToReadBooks, currntlyReadingBooks, readBooks });
-        } catch (error) {
+        } catch (error: any) {
             res.status(400).json({ error: error.message });
         }
     } else {
@@ -43,8 +46,9 @@ const getUserLibrary = async (req, res) => {
     }
 }
 
-const addToShelf = async (req, res) => {
-    const thumbnail = req.file ? req.file.filename : req.body.thumbnail;
+const addToShelf = async (req: Request, res: Response) => {
+    // const thumbnail = req.file ? req.file.filename : req.body.thumbnail;
+    const thumbnail = req.body.thumbnail;
     const {
         bookApiId,
         userEmail,
@@ -70,13 +74,13 @@ const addToShelf = async (req, res) => {
     try {
         const book = await BookModel.createBook({ bookApiId, owner, title, authors, description, publisher, thumbnail, category, pageCount, notes, progress, shelf });
         res.status(200).json({ book });
-    } catch (error) {
+    } catch (error: any) {
         res.status(400).json({ error: error.message });
     }
 }
 
-const updateBook = async (req, res) => {
-    const userId = req.user._id;
+const updateBook = async (req: IGetUserAuthInfoRequest, res: Response) => {
+    const userId = req.user?._id;
     const {
         _id,
         title,
@@ -113,23 +117,23 @@ const updateBook = async (req, res) => {
         await book.save();
         res.status(200).json({ book });
 
-    } catch (error) {
+    } catch (error: any) {
         res.status(400).json({ error: error.message });
     }
 
 }
 
-const getAllBooksOnShelf = async (req, res) => {
-    const userId = req.user._id;
+const getAllBooksOnShelf = async (req: IGetUserAuthInfoRequest, res: Response) => {
+    const userId = req.user?._id;
     const shelf = req.query.shelf;
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 5;
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 5;
     const skip = (page - 1) * limit;
     const filterCategory = req.query.category;
     const searchQuery = req.query.search;
 
     try {
-        let query = { owner: userId, shelf: shelf };
+        let query: any = { owner: userId, shelf: shelf };
         if (filterCategory) {
             query.category = filterCategory;
         }
@@ -152,8 +156,8 @@ const getAllBooksOnShelf = async (req, res) => {
     }
 }
 
-const getBookDetails = async (req, res) => {
-    const userId = req.user._id;
+const getBookDetails = async (req: IGetUserAuthInfoRequest, res: Response) => {
+    const userId = req.user?._id;
     const bookId = req.query.bookId;
 
     try {
@@ -163,12 +167,12 @@ const getBookDetails = async (req, res) => {
         }
         res.status(200).json({ book });
 
-    } catch (error) {
+    } catch (error: any) {
         res.status(400).json({ error: error.message });
     }
 }
 
-const deleteBook = async (req, res) => {
+const deleteBook = async (req: Request, res: Response) => {
     const bookId = req.query.bookId;
     try {
         const deletedBook = await BookModel.findByIdAndDelete(bookId);
@@ -178,7 +182,7 @@ const deleteBook = async (req, res) => {
     }
 }
 
-module.exports = {
+export {
     searchBooks,
     getUserLibrary,
     addToShelf,
