@@ -48,7 +48,7 @@ const getUserLibrary = async (req: IGetUserAuthInfoRequest, res: Response) => {
 }
 
 const addToShelf = async (req: Request, res: Response) => {
-    // const thumbnail = req.file ? req.file.filename : req.body.thumbnail;
+
     const thumbnail = req.body.thumbnail;
     const {
         bookApiId,
@@ -63,7 +63,6 @@ const addToShelf = async (req: Request, res: Response) => {
         progress,
         shelf
     } = req.body;
-    console.log(req.body);
 
     const user = await User.findOne({ email: userEmail });
     let owner;
@@ -78,9 +77,9 @@ const addToShelf = async (req: Request, res: Response) => {
         const book = await Book.createBook({ bookApiId, owner, title, authors, description, publisher, thumbnail, category, pageCount, notes, progress, shelf });
         res.status(200).json({ book });
     } catch (error: any) {
-        console.log(error.message);
-
-        res.status(400).json({ error: error.message });
+        const lastIndex = error.message.lastIndexOf(":") + 1;
+        const desiredMessage = error.message.substring(lastIndex).trim();
+        res.status(400).json({ error: desiredMessage });
     }
 }
 
@@ -104,7 +103,6 @@ const updateBook = async (req: IGetUserAuthInfoRequest, res: Response) => {
         }
 
         const updatedProgress = progress;
-
         book.progress = updatedProgress;
 
         if (book.pageCount === updatedProgress) {

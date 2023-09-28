@@ -120,6 +120,8 @@ const bookSchema = new Schema({
     },
     category: {
         type: String,
+        required: true,
+        enum: CategoryType,
         default: 'Not specified'
     },
     pageCount: {
@@ -138,8 +140,8 @@ const bookSchema = new Schema({
     },
     shelf: {
         type: Number,
-        // required: true,
-        // enum: Object.values(ShelfType),
+        required: true,
+        enum: ShelfType,
         default: ShelfType.WANT_TO_READ,
     },
 });
@@ -175,12 +177,12 @@ bookSchema.statics.createBook = async function (data) {
             return book;
         }
 
-    } catch (error) {
+    } catch (error: any) {
+        console.log(error.message);
+
         console.error('Error creating book:', error);
         throw error;
     }
-
-
 
 };
 
