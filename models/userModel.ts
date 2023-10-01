@@ -1,8 +1,7 @@
-const mongoose = require('mongoose');
-const bcrypt = require('bcrypt');
-const validator = require('validator');
-const Schema = mongoose.Schema;
-const { generateVerificationToken, sendVerificationEmail } = require('../utils/email')
+import mongoose, { Schema, Document } from 'mongoose';
+import bcrypt from 'bcrypt';
+import validator from 'validator';
+import { generateVerificationToken, sendVerificationEmail } from '../utils/email';
 
 /**
  * @swagger
@@ -26,7 +25,42 @@ const { generateVerificationToken, sendVerificationEmail } = require('../utils/e
  *         - isAdmin
  */
 
-const userSchema = new Schema({
+// defines the shape of a user document DB collection, specifies the fields and their data types that a user document should have- email, password, isAdmin, bio, etc. 
+// This interface helps you ensure that when you create or update user documents in your application, they conform to this structure
+export interface User extends Document {
+    email: string;
+    password: string;
+    isAdmin: boolean;
+    bio?: string | null;
+    username: string;
+    isVerified: boolean;
+    verificationToken: string | null;
+    verificationTokenExpiry: Date | null;
+    resetToken: string | null;
+    resetTokenExpiry: Date | null;
+}
+
+// includes all the properties of the User interface but also includes some additional fields provided by Mongoose - _id, __v, and any 
+//  When you retrieve a user document from the database using Mongoose methods like .find(), .findOne(), etc., it will have the structure defined in the UserDocument interface.
+export interface UserDocument extends mongoose.Document {
+    email: string;
+    password: string;
+    isAdmin: boolean;
+    bio?: string | null;
+    username: string;
+    isVerified: boolean;
+    verificationToken: string | null;
+    verificationTokenExpiry: Date | null;
+    resetToken: string | null;
+    resetTokenExpiry: Date | null;
+}
+
+// represents the entire collection of users in your database and provides access to methods that can be performed on the entire collection - find, findOne, create, update, etc. It also includes any static methods you define on your model - signup and login.
+export interface UserModel extends mongoose.Model<UserDocument> {
+    signup(email: string, password: string, isAdmin: boolean, bio: string, username: string): Promise<UserDocument>;
+    login(emailOrUsername: string, password: string): Promise<UserDocument>;
+}
+const userSchema: Schema<UserDocument, UserModel> = new Schema({
     email: {
         type: String,
         required: true,
@@ -70,7 +104,7 @@ const userSchema = new Schema({
 });
 
 //static signup method for users
-userSchema.statics.signup = async function (email, password, isAdmin, bio, username) {
+userSchema.statics.signup = async function (email: string, password: string, isAdmin: boolean, bio: string, username: string) {
     //validation
     if (!email || !password || !username) {
         throw Error('All fields must be filled');
@@ -105,7 +139,7 @@ userSchema.statics.signup = async function (email, password, isAdmin, bio, usern
 };
 
 //static login method for users
-userSchema.statics.login = async function (emailOrUsername, password) {
+userSchema.statics.login = async function (emailOrUsername: string, password: string): Promise<User> {
     //validation
     if (!emailOrUsername || !password) {
         throw Error('All fields must be filled');
@@ -133,4 +167,4 @@ userSchema.statics.login = async function (emailOrUsername, password) {
     return user;
 };
 
-module.exports = mongoose.model('User', userSchema);
+export default mongoose.model<UserDocument, UserModel>('User', userSchema);

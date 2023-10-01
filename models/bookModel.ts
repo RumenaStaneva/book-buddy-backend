@@ -1,11 +1,42 @@
-const mongoose = require('mongoose');
-const ShelfType = require('../enums/shelfTypes');
-const CategoryType = require('../enums/CategoryTypes');
-const { body } = require('express-validator');
+import mongoose, { Schema, Model } from 'mongoose';
+import ShelfType from '../enums/shelfTypes';
+import CategoryType from '../enums/categoryTypes';
+import { body } from 'express-validator';
 
-const Schema = mongoose.Schema;
+interface BookModel extends Model<BookDocument> {
+    createBook(data: BookData): Promise<BookDocument>;
+}
 
 
+interface BookData {
+    bookApiId: string;
+    owner: string;
+    title?: string;
+    authors: string[];
+    description: string;
+    publisher?: string;
+    thumbnail?: string;
+    category?: string;
+    pageCount: number;
+    progress?: number;
+    shelf: number;
+    notes?: string[];
+}
+
+interface BookDocument extends mongoose.Document {
+    bookApiId: string;
+    owner: string;
+    title?: string;
+    authors: string[];
+    description: string;
+    publisher?: string;
+    thumbnail?: string;
+    category?: string;
+    pageCount: number;
+    progress?: number;
+    shelf: number;
+    notes?: string[];
+}
 /**
  * @swagger
  * components:
@@ -89,6 +120,8 @@ const bookSchema = new Schema({
     },
     category: {
         type: String,
+        required: true,
+        enum: CategoryType,
         default: 'Not specified'
     },
     pageCount: {
@@ -96,8 +129,8 @@ const bookSchema = new Schema({
         required: [true, 'Page count is required'],
         min: [1, 'Page count must be a positive integer'],
         validate: {
-            validator: function (value) {
-                return value !== 0; // Custom validation condition
+            validator: function (value: number) {
+                return value !== 0;
             },
             message: 'Page count must be greater than 0',
         },
@@ -108,7 +141,7 @@ const bookSchema = new Schema({
     shelf: {
         type: Number,
         required: true,
-        enum: Object.values(ShelfType),
+        enum: ShelfType,
         default: ShelfType.WANT_TO_READ,
     },
 });
@@ -133,6 +166,10 @@ bookSchema.statics.createBook = async function (data) {
         ]);
 
         const existingBook = await this.findOne({ bookApiId, owner })
+        console.log(shelf);
+
+
+
         if (existingBook) {
             throw new Error('Book already exists in your shelf');
         } else {
@@ -140,14 +177,15 @@ bookSchema.statics.createBook = async function (data) {
             return book;
         }
 
-    } catch (error) {
+    } catch (error: any) {
+        console.log(error.message);
+
         console.error('Error creating book:', error);
         throw error;
     }
 
-
-
 };
 
 
-module.exports = mongoose.model('Book', bookSchema);
+const Book = mongoose.model<BookDocument, BookModel>('Book', bookSchema);
+export default Book;

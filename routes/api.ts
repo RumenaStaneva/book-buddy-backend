@@ -1,7 +1,7 @@
-const express = require('express');
-const { searchBooks } = require('../controllers/booksController');
+import { Router } from 'express';
+import { searchBooks } from '../controllers/booksController';
 
-const router = express.Router();
+const router = Router();
 /**
  * @swagger
  * /search-book-title:
@@ -13,4 +13,5 @@ const router = express.Router();
  */
 router.post('/search-book-title', searchBooks);
 
-module.exports = router;
+
+export default router;

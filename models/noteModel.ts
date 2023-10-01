@@ -1,10 +1,19 @@
+import mongoose, { Schema, Document, Model } from 'mongoose';
+import BookModel from './bookModel';
 
+interface Note {
+    userId: string;
+    bookId: string;
+    noteText: string;
+}
 
-const mongoose = require('mongoose');
-const Schema = mongoose.Schema;
-const BookModel = require('../models/bookModel');
+interface NoteDocument extends Document, Note { }
 
-const noteSchema = new Schema({
+interface NoteModel extends Model<NoteDocument> {
+    createNote(data: Note): Promise<NoteDocument>;
+}
+
+const noteSchema = new Schema<NoteDocument, NoteModel>({
     userId: {
         type: String,
         required: true,
@@ -19,7 +28,7 @@ const noteSchema = new Schema({
     },
 });
 
-noteSchema.statics.createNote = async function (data) {
+noteSchema.statics.createNote = async function (data: Note): Promise<NoteDocument> {
     const { userId, bookId, noteText } = data;
     try {
         const existingBook = await BookModel.findOne({ _id: bookId, owner: userId });
@@ -35,4 +44,4 @@ noteSchema.statics.createNote = async function (data) {
     }
 };
 
-module.exports = mongoose.model('Note', noteSchema);
+export default mongoose.model<NoteDocument, NoteModel>('Note', noteSchema);

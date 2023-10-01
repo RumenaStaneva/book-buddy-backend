@@ -1,9 +1,10 @@
-const nodemailer = require('nodemailer');
-const fs = require('fs');
-const ejs = require('ejs');
-const path = require('path');
+import nodemailer from 'nodemailer';
+import fs from 'fs';
+import ejs from 'ejs';
+import path from 'path';
+import dotenv from 'dotenv';
 
-require('dotenv').config();
+dotenv.config();
 
 const createTransporter = () => {
     return nodemailer.createTransport({
@@ -19,7 +20,7 @@ const createTransporter = () => {
     });
 }
 
-const sendVerificationEmail = async (email, verificationToken, username) => {
+const sendVerificationEmail = async (email: string, verificationToken: string, username: string) => {
     const transporter = createTransporter();
     const templatePath = path.join(__dirname, '..', 'emailTemplates', 'confirmation_email.ejs');
 
@@ -52,7 +53,7 @@ const generateVerificationToken = (length = 32) => {
     return token;
 }
 
-const resetPasswordEmail = async (email, resetToken) => {
+const resetPasswordEmail = async (email: string, resetToken: string) => {
     const transporter = createTransporter();
     const templatePath = path.join(__dirname, '..', 'emailTemplates', 'reset_password_email.ejs');
 
@@ -71,8 +72,4 @@ const resetPasswordEmail = async (email, resetToken) => {
     await transporter.sendMail(mailOptions);
 }
 
-module.exports = {
-    sendVerificationEmail,
-    generateVerificationToken,
-    resetPasswordEmail
-};
+export { sendVerificationEmail, generateVerificationToken, resetPasswordEmail };

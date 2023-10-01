@@ -1,9 +1,10 @@
-const express = require('express');
-const { loginUser, signUpUser, signUpAdmin, getProfile, updateProfile, verifyUser, forgotPassword, resetPassword } = require('../controllers/userController');
-const requireAuth = require('../middleware/requireAuth');
+import { Router } from 'express';
+// const { loginUser, signUpUser, signUpAdmin, getProfile, updateProfile, verifyUser, forgotPassword, resetPassword } = require('../controllers/userController');
+import { loginUser, signUpUser, signUpAdmin, getProfile, updateProfile, verifyUser, forgotPassword, resetPassword } from '../controllers/userController'
+import requireAuth from '../middleware/requireAuth';
 
+const router: Router = Router();
 
-const router = express.Router();
 router.get('/verify/:token', verifyUser);
 
 /**
@@ -140,4 +141,4 @@ router.use(requireAuth);
 router.get('/profile', getProfile);
 router.patch('/update-profile-info', updateProfile);
 
-module.exports = router;
+export default router;
