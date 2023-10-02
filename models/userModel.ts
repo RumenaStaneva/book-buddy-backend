@@ -3,6 +3,7 @@ import bcrypt from 'bcrypt';
 import validator from 'validator';
 import { generateVerificationToken, sendVerificationEmail } from '../utils/email';
 
+
 /**
  * @swagger
  * components:
@@ -32,6 +33,7 @@ export interface User extends Document {
     password: string;
     isAdmin: boolean;
     bio?: string | null;
+    userId?: string | null;
     username: string;
     isVerified: boolean;
     verificationToken: string | null;
@@ -47,6 +49,7 @@ export interface UserDocument extends mongoose.Document {
     password: string;
     isAdmin: boolean;
     bio?: string | null;
+    userId?: string | null;
     username: string;
     isVerified: boolean;
     verificationToken: string | null;
@@ -59,6 +62,8 @@ export interface UserDocument extends mongoose.Document {
 export interface UserModel extends mongoose.Model<UserDocument> {
     signup(email: string, password: string, isAdmin: boolean, bio: string, username: string): Promise<UserDocument>;
     login(emailOrUsername: string, password: string): Promise<UserDocument>;
+    signUpWithGoogleAuth(userId: string, userEmail: string): Promise<UserDocument>;
+    loginWithGoogleAuth(userId: string, userEmail: string): Promise<UserDocument>;
 }
 const userSchema: Schema<UserDocument, UserModel> = new Schema({
     email: {
@@ -75,6 +80,9 @@ const userSchema: Schema<UserDocument, UserModel> = new Schema({
         required: true,
     },
     bio: {
+        type: String
+    },
+    userId: {
         type: String
     },
     username: {
@@ -138,6 +146,23 @@ userSchema.statics.signup = async function (email: string, password: string, isA
     return user;
 };
 
+userSchema.statics.signUpWithGoogleAuth = async function (userId: string, userEmail: string) {
+    const username = userEmail.split('@')[0];
+    let userExisting = await this.findOne({ userId: userId });
+    if (userExisting) {
+        throw Error('User already exists');
+    }
+    const user = await this.create({
+        userId: userId,
+        email: userEmail,
+        username: username,
+        isVerified: true,
+        isAdmin: false,
+        password: 'signed with google'
+    });
+    return user;
+
+};
 //static login method for users
 userSchema.statics.login = async function (emailOrUsername: string, password: string): Promise<User> {
     //validation
@@ -167,4 +192,14 @@ userSchema.statics.login = async function (emailOrUsername: string, password: st
     return user;
 };
 
-export default mongoose.model<UserDocument, UserModel>('User', userSchema);
+userSchema.statics.loginWithGoogleAuth = async function (userId: string, userEmail: string) {
+    const user = await this.findOne({ userId, email: userEmail })
+    if (!user) {
+        throw Error('User not does not exist, please signup first');
+    }
+    return user;
+}
+
+// export default mongoose.model<UserDocument, UserModel>('User', userSchema);
+const User = mongoose.model<UserDocument, UserModel>('User', userSchema);
+export default User;

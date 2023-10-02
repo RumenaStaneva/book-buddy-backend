@@ -8,11 +8,9 @@ import noteRoutes from './routes/notes';
 import tokenCleanup from './tokenCleanup';
 import mongoose from 'mongoose';
 import swaggerUi from 'swagger-ui-express';
+import { loginWithGoogle } from './controllers/userController';
 // import swaggerSpec from './swagger.js';
 
-
-// const express = require('express');
-// import { Express, Request, Response, Application } from 'express';
 const app: Application = express();
 
 

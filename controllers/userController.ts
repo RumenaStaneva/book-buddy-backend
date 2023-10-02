@@ -1,11 +1,12 @@
-import { NextFunction, Request, Response, Router } from 'express';
-
+import { Request, Response } from 'express';
 import User from '../models/userModel';
 import jwt, { JwtPayload } from 'jsonwebtoken';
 const SECRET: string = process.env.SECRET || '';
 import { generateVerificationToken, resetPasswordEmail } from '../utils/email';
 import { hashPassword, comparePasswords } from '../utils/password';
 import { IGetUserAuthInfoRequest } from '../types/express';
+import { verifyGoogleToken } from './authController';
+// import userModel from '../models/userModel';
 //_id of mongodb
 const createToken = (_id: string): string => {
     return jwt.sign({ _id }, SECRET, { expiresIn: '3d' })
@@ -180,6 +181,54 @@ const resetPassword = async (req: Request, res: Response) => {
     }
 };
 
+const signupWithGoogle = async (req: Request, res: Response) => {
+    const { clientId, credential } = req.body;
+    try {
+        const userIsVerified = await verifyGoogleToken(credential, clientId);
+        if (userIsVerified) {
+            let user;
+            const existingUser = await User.findOne({ email: userIsVerified.userEmail });
+
+            if (existingUser) {
+                existingUser.userId = userIsVerified.userId;
+                await existingUser.save();
+                const email = existingUser.email;
+                const username = existingUser.username;
+                const isVerified = existingUser.isVerified;
+                const token = createToken(existingUser._id);
+                res.status(200).json({ email, token, username, isVerified });
+            } else {
+                user = await User.signUpWithGoogleAuth(userIsVerified.userId, userIsVerified.userEmail!);
+                res.status(200).json({ user });
+            }
+        }
+    } catch (error: any) {
+        console.error('google create user error', error);
+        res.status(400).json({ error: error.message });
+    }
+}
+
+const loginWithGoogle = async (req: Request, res: Response) => {
+    const { clientId, credential } = req.body;
+
+    try {
+        const userIsVerified = await verifyGoogleToken(credential, clientId);
+        if (userIsVerified) {
+            const user = await User.loginWithGoogleAuth(userIsVerified.userId, userIsVerified.userEmail!);
+            const email = user.email;
+            const username = user.username;
+            const isVerified = user.isVerified;
+            if (user) {
+                const token = createToken(user._id);
+                res.status(200).json({ email, token, username, isVerified });
+            }
+        }
+    } catch (error: any) {
+        console.error(error);
+        res.status(400).json({ error: error.message });
+    }
+}
+
 export {
     loginUser,
     signUpUser,
@@ -188,5 +237,7 @@ export {
     updateProfile,
     verifyUser,
     forgotPassword,
-    resetPassword
+    resetPassword,
+    signupWithGoogle,
+    loginWithGoogle
 }
