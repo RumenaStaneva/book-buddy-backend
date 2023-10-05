@@ -32,13 +32,13 @@ const getUserLibrary = async (req: IGetUserAuthInfoRequest, res: Response) => {
             const wantToReadBooks = await Book.find({ owner: userId, shelf: 0 })
                 .sort({ _id: -1 })
                 .limit(5);
-            const currntlyReadingBooks = await Book.find({ owner: userId, shelf: 1 })
+            const currentlyReadingBooks = await Book.find({ owner: userId, shelf: 1 })
                 .sort({ _id: -1 })
                 .limit(5);
             const readBooks = await Book.find({ owner: userId, shelf: 2 })
                 .sort({ _id: -1 })
                 .limit(5);
-            res.status(200).json({ wantToReadBooks, currntlyReadingBooks, readBooks });
+            res.status(200).json({ wantToReadBooks, currentlyReadingBooks, readBooks });
         } catch (error: any) {
             res.status(400).json({ error: error.message });
         }
@@ -96,19 +96,24 @@ const updateBook = async (req: IGetUserAuthInfoRequest, res: Response) => {
         shelf,
         pageCount
     } = req.body.book;
+
     try {
         const book = await Book.findOne({ owner: userId, _id: _id });
         if (!book) {
-            return res.status(400).json({ error: 'Book does not exist' });
+            return res.status(400).json({ message: 'Book does not exist' });
+        }
+
+        if (progress < 0) {
+            return res.status(400).json({ message: 'Progress must be a positive number' });
         }
 
         const updatedProgress = progress;
-        book.progress = updatedProgress;
-
-        if (book.pageCount === updatedProgress) {
+        if (updatedProgress >= book.pageCount) {
             book.shelf = 2;
+            book.progress = book.pageCount;
         } else {
             book.shelf = shelf;
+            book.progress = updatedProgress;
         }
 
         book.title = title;
