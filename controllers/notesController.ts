@@ -9,7 +9,6 @@ const createNote = async (req: IGetUserAuthInfoRequest, res: Response) => {
     const userId = req.user?._id;
     const { bookId, noteText } = req.body;
     try {
-        // console.log(userId, bookId, noteText);
         const note = await NoteModel.createNote({ bookId, userId, noteText });
         res.status(200).json({ note });
     } catch (error: any) {

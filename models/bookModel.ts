@@ -166,9 +166,6 @@ bookSchema.statics.createBook = async function (data) {
         ]);
 
         const existingBook = await this.findOne({ bookApiId, owner })
-        console.log(shelf);
-
-
 
         if (existingBook) {
             throw new Error('Book already exists in your shelf');
@@ -178,8 +175,6 @@ bookSchema.statics.createBook = async function (data) {
         }
 
     } catch (error: any) {
-        console.log(error.message);
-
         console.error('Error creating book:', error);
         throw error;
     }
