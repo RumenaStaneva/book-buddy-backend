@@ -40,6 +40,7 @@ export interface User extends Document {
     verificationTokenExpiry: Date | null;
     resetToken: string | null;
     resetTokenExpiry: Date | null;
+    profilePicture: string | null;
 }
 
 // includes all the properties of the User interface but also includes some additional fields provided by Mongoose - _id, __v, and any 
@@ -56,6 +57,7 @@ export interface UserDocument extends mongoose.Document {
     verificationTokenExpiry: Date | null;
     resetToken: string | null;
     resetTokenExpiry: Date | null;
+    profilePicture: string | null;
 }
 
 // represents the entire collection of users in your database and provides access to methods that can be performed on the entire collection - find, findOne, create, update, etc. It also includes any static methods you define on your model - signup and login.
@@ -108,6 +110,10 @@ const userSchema: Schema<UserDocument, UserModel> = new Schema({
     resetTokenExpiry: {
         type: Date,
         default: null,
+    },
+    profilePicture: {
+        type: String,
+        default: null
     }
 });
 
