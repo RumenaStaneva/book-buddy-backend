@@ -6,7 +6,7 @@ import { generateVerificationToken, resetPasswordEmail } from '../utils/email';
 import { hashPassword, comparePasswords } from '../utils/password';
 import { IGetUserAuthInfoRequest } from '../types/express';
 import { verifyGoogleToken } from './authController';
-import uploadImageToStorage from '../utils/googlestorage';
+import { uploadImageToStorage, deleteImageFromStorage } from '../utils/googlestorage';
 
 const createToken = (_id: string): string => {
     return jwt.sign({ _id }, SECRET, { expiresIn: '3d' })
@@ -124,15 +124,20 @@ const updateProfile = async (req: IGetUserAuthInfoRequest, res: Response) => {
 }
 
 const uploadProfilePicture = async (req: IGetUserAuthInfoRequest, res: Response) => {
-    console.log('yes');
-
     const userId = req.user?._id;
-    console.log(userId);
     const existingUser = await User.findOne({ _id: userId });
     if (!existingUser) {
         return res.status(400).json({ error: 'User does not exist' });
     }
     try {
+        // Delete previous profile picture from Google Cloud Storage if it's not the default one
+        if (existingUser.profilePicture && existingUser.profilePicture !== process.env.DEFAULT_PROFILE_PICTURE_URL) {
+            const filePath = new URL(existingUser.profilePicture).pathname;
+            const decodedFilePath = decodeURIComponent(filePath);
+            const fileName = decodedFilePath.replace(`/${process.env.GOOGLE_STORAGE_BUCKET}/`, '');
+            await deleteImageFromStorage(fileName);
+        }
+        //add the new encoded image to user 
         const encodedImage = req.body.profilePicture;
         const uploadedFile = await uploadImageToStorage(encodedImage);
         const profilePictureUrl = uploadedFile.publicUrl();

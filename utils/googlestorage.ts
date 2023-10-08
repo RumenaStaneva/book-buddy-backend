@@ -26,4 +26,14 @@ async function uploadImageToStorage(encodedImage: string) {
     return file;
 }
 
-export default uploadImageToStorage;
+const deleteImageFromStorage = async (fileName: string) => {
+    try {
+        await storage.bucket(`${process.env.GOOGLE_STORAGE_BUCKET}`).file(fileName).delete();
+        console.log(`File ${fileName} deleted successfully.`);
+    } catch (error) {
+        console.error(`Error deleting file ${fileName}: ${error}`);
+        throw error;
+    }
+};
+
+export { uploadImageToStorage, deleteImageFromStorage };
