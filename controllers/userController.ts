@@ -22,7 +22,7 @@ const loginUser = async (req: Request, res: Response) => {
         const profilePictureUrl = user.profilePicture;
         if (user) {
             const token = createToken(user._id);
-            res.status(200).json({ email, token, username, isVerified, profilePictureUrl });
+            res.status(200).json({ email, token, username, isVerified, profilePicture: profilePictureUrl });
         }
     } catch (error: any) {
         res.status(400).json({ error: error.message });
@@ -132,11 +132,16 @@ const uploadProfilePicture = async (req: IGetUserAuthInfoRequest, res: Response)
     if (!existingUser) {
         return res.status(400).json({ error: 'User does not exist' });
     }
-    const encodedImage = req.body.profilePicture;
-    const uploadedFile = await uploadImageToStorage(encodedImage);
-    const profilePictureUrl = uploadedFile.publicUrl();
-    existingUser.profilePicture = profilePictureUrl;
-    await existingUser.save();
+    try {
+        const encodedImage = req.body.profilePicture;
+        const uploadedFile = await uploadImageToStorage(encodedImage);
+        const profilePictureUrl = uploadedFile.publicUrl();
+        existingUser.profilePicture = profilePictureUrl;
+        await existingUser.save();
+        return res.status(200).json({ user: existingUser })
+    } catch (error) {
+        return res.status(404).json({ error });
+    }
 };
 
 const forgotPassword = async (req: Request, res: Response) => {
