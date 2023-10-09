@@ -6,8 +6,8 @@ import { generateVerificationToken, resetPasswordEmail } from '../utils/email';
 import { hashPassword, comparePasswords } from '../utils/password';
 import { IGetUserAuthInfoRequest } from '../types/express';
 import { verifyGoogleToken } from './authController';
-// import userModel from '../models/userModel';
-//_id of mongodb
+import { uploadImageToStorage, deleteImageFromStorage } from '../utils/googlestorage';
+
 const createToken = (_id: string): string => {
     return jwt.sign({ _id }, SECRET, { expiresIn: '3d' })
 }
@@ -19,9 +19,10 @@ const loginUser = async (req: Request, res: Response) => {
         const email = user.email;
         const username = user.username;
         const isVerified = user.isVerified;
+        const profilePictureUrl = user.profilePicture;
         if (user) {
             const token = createToken(user._id);
-            res.status(200).json({ email, token, username, isVerified });
+            res.status(200).json({ email, token, username, isVerified, profilePicture: profilePictureUrl });
         }
     } catch (error: any) {
         res.status(400).json({ error: error.message });
@@ -121,6 +122,32 @@ const updateProfile = async (req: IGetUserAuthInfoRequest, res: Response) => {
         res.status(400).json({ error: error.message });
     }
 }
+
+const uploadProfilePicture = async (req: IGetUserAuthInfoRequest, res: Response) => {
+    const userId = req.user?._id;
+    const existingUser = await User.findOne({ _id: userId });
+    if (!existingUser) {
+        return res.status(400).json({ error: 'User does not exist' });
+    }
+    try {
+        // Delete previous profile picture from Google Cloud Storage if it's not the default one
+        if (existingUser.profilePicture && existingUser.profilePicture !== process.env.DEFAULT_PROFILE_PICTURE_URL) {
+            const filePath = new URL(existingUser.profilePicture).pathname;
+            const decodedFilePath = decodeURIComponent(filePath);
+            const fileName = decodedFilePath.replace(`/${process.env.GOOGLE_STORAGE_BUCKET}/`, '');
+            await deleteImageFromStorage(fileName);
+        }
+        //add the new encoded image to user 
+        const encodedImage = req.body.profilePicture;
+        const uploadedFile = await uploadImageToStorage(encodedImage);
+        const profilePictureUrl = uploadedFile.publicUrl();
+        existingUser.profilePicture = profilePictureUrl;
+        await existingUser.save();
+        return res.status(200).json({ user: existingUser })
+    } catch (error) {
+        return res.status(404).json({ error });
+    }
+};
 
 const forgotPassword = async (req: Request, res: Response) => {
     const { email } = req.body;
@@ -239,5 +266,6 @@ export {
     forgotPassword,
     resetPassword,
     signupWithGoogle,
-    loginWithGoogle
+    loginWithGoogle,
+    uploadProfilePicture
 }
