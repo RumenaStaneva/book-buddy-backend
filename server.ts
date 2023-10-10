@@ -5,6 +5,7 @@ import bookRoutes from './routes/books';
 import userRoutes from './routes/user';
 import apiRoutes from './routes/api';
 import noteRoutes from './routes/notes';
+import timeSwapRoutes from './routes/timeSwap';
 import tokenCleanup from './tokenCleanup';
 import mongoose from 'mongoose';
 import swaggerUi from 'swagger-ui-express';
@@ -39,6 +40,7 @@ app.use('/users', userRoutes);
 app.use('/api', apiRoutes);
 app.use('/books', bookRoutes);
 app.use('/notes', noteRoutes);
+app.use('/time-swap', timeSwapRoutes);
 
 mongoose.connect(MONGO_URI)
     .then(() => {
