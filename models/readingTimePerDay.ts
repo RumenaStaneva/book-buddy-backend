@@ -2,7 +2,7 @@ import mongoose, { Schema, Document, Model } from 'mongoose';
 
 interface ReadingTimePerDay {
     userId: string;
-    weekStartDate: Date;
+    screenTimeDate: Date;
     date: Date;
     screenTimeInSeconds: number;
     goalAchievedForTheDay: boolean;
@@ -21,7 +21,7 @@ const readingTimePerDaySchema = new Schema<ReadingTimePerDayDocument, ReadingTim
         type: String,
         required: true,
     },
-    weekStartDate: {
+    screenTimeDate: {
         type: Date,
         required: true,
     },
@@ -48,11 +48,11 @@ const readingTimePerDaySchema = new Schema<ReadingTimePerDayDocument, ReadingTim
 });
 
 readingTimePerDaySchema.statics.addReadingTimePerDay = async function (data: ReadingTimePerDay): Promise<ReadingTimePerDayDocument> {
-    const { userId, weekStartDate, date, screenTimeInSeconds, goalAchievedForTheDay, weeklyGoalAveragePerDay, timeInSecondsForTheDayReading } = data;
+    const { userId, screenTimeDate, date, screenTimeInSeconds, goalAchievedForTheDay, weeklyGoalAveragePerDay, timeInSecondsForTheDayReading } = data;
     try {
         const readingTimePerDay = await this.create({
             userId,
-            weekStartDate,
+            screenTimeDate,
             date,
             screenTimeInSeconds,
             goalAchievedForTheDay,
