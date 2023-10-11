@@ -1,9 +1,8 @@
 import { Request, Response } from 'express';
 import User from '../models/userModel';
 import { IGetUserAuthInfoRequest } from '../types/express';
-import screenTimePerDayModel from '../models/screenTimePerDayModel';
 import readingTimePerDayModel from '../models/readingTimePerDay';
-import { startOfWeek, endOfWeek, eachDayOfInterval, format, subWeeks } from 'date-fns';
+import { startOfWeek, endOfWeek, eachDayOfInterval, format, subWeeks, parse, addWeeks } from 'date-fns';
 import {
     saveScreenTimeData,
     calculateWeeklyGoalAverage,
@@ -37,22 +36,30 @@ const saveTime = async (req: IGetUserAuthInfoRequest, res: Response) => {
     }
     try {
         const screenTimeData = req.body;
-        const lastWeekStartDate = convertToMMDDFormat(screenTimeData[0].date);
+        const lastWeekStartDate = screenTimeData[0].date;
+        const startDate = parse(screenTimeData[0].date, 'yyyy/MM/dd', new Date());
+        const startOfWeekDay = startOfWeek(addWeeks(startDate, 1), { weekStartsOn: 2 });
+        const lastWeekEnd = endOfWeek(addWeeks(startDate, 1), { weekStartsOn: 2 });
+
+        const existingScreenTimeData = await readingTimePerDayModel.find({
+            userId: userId,
+            screenTimeDate: { $gte: startOfWeekDay, $lte: lastWeekEnd }
+        });
+
+        if (existingScreenTimeData.length > 0) {
+            return res.status(400).json({ error: 'Screen time data already submitted for this week' });
+        }
 
         const savedScreenTimeData = await saveScreenTimeData(userId, screenTimeData, lastWeekStartDate);
-        console.log('savedScreenTimeData', savedScreenTimeData);
-
-
         const weeklyGoalAveragePerDay = calculateWeeklyGoalAverage(screenTimeData);
         const readingTimeData = prepareReadingTimeData(savedScreenTimeData, weeklyGoalAveragePerDay);
-
         const savedReadingTimeData = await saveReadingTimeData(userId, readingTimeData, weeklyGoalAveragePerDay);
         return res.status(200).json({
             savedScreenTimeData,
             savedReadingTimeData
         })
-    } catch (error) {
-        return res.status(400).json({ error })
+    } catch (error: any) {
+        res.status(400).json({ error: error.message });
     }
 }
 
@@ -66,16 +73,7 @@ const getReadingTime = async (req: IGetUserAuthInfoRequest, res: Response) => {
     try {
         const today = new Date();
         const startOfWeekDay = startOfWeek(today, { weekStartsOn: 2 });
-        console.log(startOfWeekDay);
-
         const lastWeekEnd = endOfWeek(today, { weekStartsOn: 2 });
-        console.log(lastWeekEnd);
-
-
-        const datesFromLastWeek = eachDayOfInterval({ start: startOfWeekDay, end: lastWeekEnd });
-        console.log(datesFromLastWeek);
-
-        // Your existing logic to fetch and return reading time data
         const readingTimePerDay = await readingTimePerDayModel.find({
             userId: userId,
             date: { $gte: startOfWeekDay, $lte: lastWeekEnd }
