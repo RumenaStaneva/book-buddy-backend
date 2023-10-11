@@ -222,8 +222,9 @@ const signupWithGoogle = async (req: Request, res: Response) => {
                 const email = existingUser.email;
                 const username = existingUser.username;
                 const isVerified = existingUser.isVerified;
+                const profilePicture = existingUser.profilePicture;
                 const token = createToken(existingUser._id);
-                res.status(200).json({ email, token, username, isVerified });
+                res.status(200).json({ email, token, username, isVerified, profilePicture });
             } else {
                 user = await User.signUpWithGoogleAuth(userIsVerified.userId, userIsVerified.userEmail!);
                 res.status(200).json({ user });
@@ -245,9 +246,10 @@ const loginWithGoogle = async (req: Request, res: Response) => {
             const email = user.email;
             const username = user.username;
             const isVerified = user.isVerified;
+            const profilePicture = user.profilePicture;
             if (user) {
                 const token = createToken(user._id);
-                res.status(200).json({ email, token, username, isVerified });
+                res.status(200).json({ email, token, username, isVerified, profilePicture });
             }
         }
     } catch (error: any) {
