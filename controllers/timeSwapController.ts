@@ -12,21 +12,46 @@ import {
     getStartOfPreviousWeek,
     convertToMMDDFormat
 } from '../utils/timeSwap'
+import screenTimePerDayModel from '../models/screenTimePerDayModel';
 
 const getWeekDates = async (req: IGetUserAuthInfoRequest, res: Response) => {
     try {
+        const userId = req.user?._id;
+
         const currentDate = new Date();
         const lastWeekStart = startOfWeek(subWeeks(currentDate, 1), { weekStartsOn: 1 });
         const lastWeekEnd = endOfWeek(subWeeks(currentDate, 1), { weekStartsOn: 1 });
         const datesFromLastWeek = eachDayOfInterval({ start: lastWeekStart, end: lastWeekEnd });
 
+        const hasAnyWeekData = await screenTimePerDayModel.exists({
+            userId
+        })
+        const currentWeekStart = getStartOfCurrentWeek();
+        const currentWeekEnd = endOfWeek(currentWeekStart, { weekStartsOn: 2 });
+        const hasCurrentWeekData = await readingTimePerDayModel.exists({
+            userId: userId,
+            date: { $gte: currentWeekStart, $lte: currentWeekEnd }
+        });
+
         const formattedDates = datesFromLastWeek.map(date => format(date, 'MMMM dd, yyyy'));
-        res.status(200).json({ weekDates: formattedDates });
+        res.status(200).json({ hasAnyWeekData, hasCurrentWeekData, weekDates: formattedDates });
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Internal server error' });
     }
 }
+
+const getUserScreenTimeData = async (req: IGetUserAuthInfoRequest, res: Response) => {
+    const userId = req.user?._id;
+    try {
+        const hasScreenTimeData = await readingTimePerDayModel.exists({ userId: userId });
+        res.status(200).json({ hasScreenTimeData });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+};
+
 
 const saveTime = async (req: IGetUserAuthInfoRequest, res: Response) => {
     const userId = req.user?._id;
@@ -89,5 +114,6 @@ const getReadingTime = async (req: IGetUserAuthInfoRequest, res: Response) => {
 export {
     saveTime,
     getReadingTime,
-    getWeekDates
+    getWeekDates,
+    getUserScreenTimeData
 }
