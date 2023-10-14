@@ -14,7 +14,7 @@ import {
 } from '../utils/timeSwap'
 import screenTimePerDayModel from '../models/screenTimePerDayModel';
 
-const getWeekDates = async (req: IGetUserAuthInfoRequest, res: Response) => {
+const getCurrentWeekDates = async (req: IGetUserAuthInfoRequest, res: Response) => {
     try {
         const userId = req.user?._id;
 
@@ -52,6 +52,28 @@ const getUserScreenTimeData = async (req: IGetUserAuthInfoRequest, res: Response
     }
 };
 
+// const getReadingTime = async (req: IGetUserAuthInfoRequest, res: Response) => {
+//     const userId = req.user?._id;
+//     const existingUser = await User.findOne({ _id: userId });
+//     if (!existingUser) {
+//         return res.status(400).json({ error: 'User does not exist' });
+//     }
+
+//     try {
+//         const today = new Date();
+//         const startOfWeekDay = startOfWeek(today, { weekStartsOn: 2 });
+//         const lastWeekEnd = endOfWeek(today, { weekStartsOn: 2 });
+//         const readingTimePerDay = await readingTimePerDayModel.find({
+//             userId: userId,
+//             date: { $gte: startOfWeekDay, $lte: lastWeekEnd }
+//         }).sort({ date: 1 });
+
+//         return res.status(200).json({ readingTimePerDay });
+//     } catch (error) {
+//         return res.status(400).json({ error });
+//     }
+// };
+
 
 const saveTime = async (req: IGetUserAuthInfoRequest, res: Response) => {
     const userId = req.user?._id;
@@ -88,6 +110,7 @@ const saveTime = async (req: IGetUserAuthInfoRequest, res: Response) => {
     }
 }
 
+
 const getReadingTime = async (req: IGetUserAuthInfoRequest, res: Response) => {
     const userId = req.user?._id;
     const existingUser = await User.findOne({ _id: userId });
@@ -96,24 +119,27 @@ const getReadingTime = async (req: IGetUserAuthInfoRequest, res: Response) => {
     }
 
     try {
-        const today = new Date();
-        const startOfWeekDay = startOfWeek(today, { weekStartsOn: 2 });
-        const lastWeekEnd = endOfWeek(today, { weekStartsOn: 2 });
-        const readingTimePerDay = await readingTimePerDayModel.find({
-            userId: userId,
-            date: { $gte: startOfWeekDay, $lte: lastWeekEnd }
-        }).sort({ date: 1 });
+        const { startDate, endDate } = req.query;
+        console.log(startDate);
+        console.log(endDate);
 
-        return res.status(200).json({ readingTimePerDay });
+        const readingTime = await readingTimePerDayModel.find({
+            userId: userId,
+            date: { $gte: startDate, $lte: endDate }
+        }).sort({ date: 1 });
+        console.log(readingTime);
+
+        return res.status(200).json({ readingTime });
+
     } catch (error) {
         return res.status(400).json({ error });
     }
-};
+}
 
 
 export {
     saveTime,
     getReadingTime,
-    getWeekDates,
-    getUserScreenTimeData
+    getCurrentWeekDates,
+    getUserScreenTimeData,
 }
