@@ -2,12 +2,11 @@ import screenTimePerDayModel from '../models/screenTimePerDayModel';
 import readingTimePerDayModel from '../models/readingTimePerDay';
 import { startOfWeek, addWeeks, endOfWeek, eachDayOfInterval, subWeeks, } from 'date-fns';
 
-async function saveScreenTimeData(userId: string, screenTimeData: any[], weekStartDate: Date) {
+async function saveScreenTimeData(userId: string, screenTimeData: any[]) {
     return await Promise.all(screenTimeData.map(async (data: any) => {
         const date = convertToMMDDFormat(data.date);
         return await screenTimePerDayModel.addScreenTimePerDay({
             userId,
-            weekStartDate,
             date: date,
             timeInSeconds: data.timeInSecond
         });

@@ -2,7 +2,6 @@ import mongoose, { Schema, Document, Model } from 'mongoose';
 
 interface ScreenTimePerDay {
     userId: string;
-    weekStartDate: Date;
     date: Date;
     timeInSeconds: number;
 }
@@ -18,10 +17,6 @@ const screenTimePerDaySchema = new Schema<ScreenTimePerDayDocument, ScreenTimePe
         type: String,
         required: true,
     },
-    weekStartDate: {
-        type: Date,
-        required: true,
-    },
     date: {
         type: Date,
         required: true,
@@ -33,9 +28,9 @@ const screenTimePerDaySchema = new Schema<ScreenTimePerDayDocument, ScreenTimePe
 });
 
 screenTimePerDaySchema.statics.addScreenTimePerDay = async function (data: ScreenTimePerDay): Promise<ScreenTimePerDayDocument> {
-    const { userId, weekStartDate, date, timeInSeconds } = data;
+    const { userId, date, timeInSeconds } = data;
     try {
-        const screenTimePerDay = await this.create({ userId, weekStartDate, date, timeInSeconds })
+        const screenTimePerDay = await this.create({ userId, date, timeInSeconds })
         return screenTimePerDay;
     } catch (error) {
         console.error('Error creating note:', error);

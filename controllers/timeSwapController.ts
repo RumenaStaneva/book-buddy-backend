@@ -2,7 +2,8 @@ import { Request, Response } from 'express';
 import User from '../models/userModel';
 import { IGetUserAuthInfoRequest } from '../types/express';
 import readingTimePerDayModel from '../models/readingTimePerDay';
-import { startOfWeek, endOfWeek, eachDayOfInterval, format, subWeeks, parse, addWeeks } from 'date-fns';
+import { startOfWeek, endOfWeek, eachDayOfInterval, format, subWeeks, parse, addWeeks, parseISO } from 'date-fns';
+
 import {
     saveScreenTimeData,
     calculateWeeklyGoalAverage,
@@ -52,28 +53,6 @@ const getUserScreenTimeData = async (req: IGetUserAuthInfoRequest, res: Response
     }
 };
 
-// const getReadingTime = async (req: IGetUserAuthInfoRequest, res: Response) => {
-//     const userId = req.user?._id;
-//     const existingUser = await User.findOne({ _id: userId });
-//     if (!existingUser) {
-//         return res.status(400).json({ error: 'User does not exist' });
-//     }
-
-//     try {
-//         const today = new Date();
-//         const startOfWeekDay = startOfWeek(today, { weekStartsOn: 2 });
-//         const lastWeekEnd = endOfWeek(today, { weekStartsOn: 2 });
-//         const readingTimePerDay = await readingTimePerDayModel.find({
-//             userId: userId,
-//             date: { $gte: startOfWeekDay, $lte: lastWeekEnd }
-//         }).sort({ date: 1 });
-
-//         return res.status(200).json({ readingTimePerDay });
-//     } catch (error) {
-//         return res.status(400).json({ error });
-//     }
-// };
-
 
 const saveTime = async (req: IGetUserAuthInfoRequest, res: Response) => {
     const userId = req.user?._id;
@@ -83,7 +62,6 @@ const saveTime = async (req: IGetUserAuthInfoRequest, res: Response) => {
     }
     try {
         const screenTimeData = req.body;
-        const lastWeekStartDate = screenTimeData[0].date;
         const startDate = parse(screenTimeData[0].date, 'yyyy/MM/dd', new Date());
         const startOfWeekDay = startOfWeek(addWeeks(startDate, 1), { weekStartsOn: 2 });
         const lastWeekEnd = endOfWeek(addWeeks(startDate, 1), { weekStartsOn: 2 });
@@ -97,7 +75,7 @@ const saveTime = async (req: IGetUserAuthInfoRequest, res: Response) => {
             return res.status(400).json({ error: 'Screen time data already submitted for this week' });
         }
 
-        const savedScreenTimeData = await saveScreenTimeData(userId, screenTimeData, lastWeekStartDate);
+        const savedScreenTimeData = await saveScreenTimeData(userId, screenTimeData);
         const weeklyGoalAveragePerDay = calculateWeeklyGoalAverage(screenTimeData);
         const readingTimeData = prepareReadingTimeData(savedScreenTimeData, weeklyGoalAveragePerDay);
         const savedReadingTimeData = await saveReadingTimeData(userId, readingTimeData, weeklyGoalAveragePerDay);
@@ -110,7 +88,6 @@ const saveTime = async (req: IGetUserAuthInfoRequest, res: Response) => {
     }
 }
 
-
 const getReadingTime = async (req: IGetUserAuthInfoRequest, res: Response) => {
     const userId = req.user?._id;
     const existingUser = await User.findOne({ _id: userId });
@@ -119,17 +96,52 @@ const getReadingTime = async (req: IGetUserAuthInfoRequest, res: Response) => {
     }
 
     try {
-        const { startDate, endDate } = req.query;
-        console.log(startDate);
-        console.log(endDate);
+        const startDate = String(req.query.startDate);
+        const endDate = String(req.query.endDate);
+        // console.log(startDate);
+        // console.log(endDate);
+        if (!startDate || !endDate) {
+            return res.status(400).json({ error: 'startDate and endDate are required parameters.' });
+        }
+        const parsedStartDate = new Date(startDate);
+        const parsedEndDate = new Date(endDate);
+
+        //converting the dates to UTC
+        const utcStartDate = new Date(parsedStartDate.getTime() - parsedStartDate.getTimezoneOffset() * 60000);
+        const utcEndDate = new Date(parsedEndDate.getTime() - parsedEndDate.getTimezoneOffset() * 60000);
+
+        // console.log('utcStartDate', utcStartDate);
+        // console.log('utcEndDate', utcEndDate);
 
         const readingTime = await readingTimePerDayModel.find({
             userId: userId,
-            date: { $gte: startDate, $lte: endDate }
+            date: { $gte: utcStartDate, $lte: utcEndDate }
         }).sort({ date: 1 });
-        console.log(readingTime);
+        // console.log(readingTime);
 
         return res.status(200).json({ readingTime });
+
+    } catch (error) {
+        return res.status(400).json({ error });
+    }
+}
+
+const hasReadingTimeAnytime = async (req: IGetUserAuthInfoRequest, res: Response) => {
+    const userId = req.user?._id;
+    const existingUser = await User.findOne({ _id: userId });
+    if (!existingUser) {
+        return res.status(400).json({ error: 'User does not exist' });
+    }
+
+    try {
+        const readingTime = await readingTimePerDayModel.find({
+            userId: userId,
+        }).sort({ date: 1 });
+        if (!readingTime) {
+            return res.status(200).json({ hasReadingTime: false });
+        }
+
+        return res.status(200).json({ hasReadingTime: true });
 
     } catch (error) {
         return res.status(400).json({ error });
@@ -142,4 +154,5 @@ export {
     getReadingTime,
     getCurrentWeekDates,
     getUserScreenTimeData,
+    hasReadingTimeAnytime
 }
