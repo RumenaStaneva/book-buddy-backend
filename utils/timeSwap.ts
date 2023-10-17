@@ -45,6 +45,7 @@ async function saveReadingTimeData(userId: string, readingTimeData: any[], weekl
             screenTimeInSeconds: data.screenTimeInSeconds,
             goalAchievedForTheDay: false,
             weeklyGoalAveragePerDay,
+            timeInSecondsLeftForAchievingReadingGoal: data.screenTimeInSeconds,
             timeInSecondsForTheDayReading: 0
         });
     }));
