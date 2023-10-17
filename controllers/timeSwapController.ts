@@ -2,8 +2,8 @@ import { Request, Response } from 'express';
 import User from '../models/userModel';
 import { IGetUserAuthInfoRequest } from '../types/express';
 import readingTimePerDayModel from '../models/readingTimePerDay';
-import { startOfWeek, endOfWeek, eachDayOfInterval, format, subWeeks, parse, addWeeks, parseISO } from 'date-fns';
-
+import { startOfWeek, endOfWeek, eachDayOfInterval, format, subWeeks, parse, addWeeks, addHours, startOfDay, parseISO } from 'date-fns';
+import { format as formatDate, utcToZonedTime, zonedTimeToUtc } from 'date-fns-tz';
 import {
     saveScreenTimeData,
     calculateWeeklyGoalAverage,
@@ -98,6 +98,7 @@ const getReadingTime = async (req: IGetUserAuthInfoRequest, res: Response) => {
     try {
         const startDate = String(req.query.startDate);
         const endDate = String(req.query.endDate);
+
         // console.log(startDate);
         // console.log(endDate);
         if (!startDate || !endDate) {
@@ -117,7 +118,6 @@ const getReadingTime = async (req: IGetUserAuthInfoRequest, res: Response) => {
             userId: userId,
             date: { $gte: utcStartDate, $lte: utcEndDate }
         }).sort({ date: 1 });
-        // console.log(readingTime);
 
         return res.status(200).json({ readingTime });
 
@@ -148,11 +148,38 @@ const hasReadingTimeAnytime = async (req: IGetUserAuthInfoRequest, res: Response
     }
 }
 
+const updateReadingTimeForToday = async (req: IGetUserAuthInfoRequest, res: Response) => {
+    const userId = req.user?._id;
+    const existingUser = await User.findOne({ _id: userId });
+    if (!existingUser) {
+        return res.status(400).json({ error: 'User does not exist' });
+    }
+
+    try {
+        const { date, timeInSecondsLeftForAchievingReadingGoal, timeInSecondsForTheDayReading } = req.body;
+        const updatedReadingTimeRecord = await readingTimePerDayModel.findOneAndUpdate(
+            {
+                userId, date
+            },
+            { timeInSecondsForTheDayReading, timeInSecondsLeftForAchievingReadingGoal },
+            { new: true }
+        );
+        // console.log('readingTimeRecord', updatedReadingTimeRecord);
+
+        return res.json({
+            updatedReadingTimeRecord
+        });
+    } catch (error) {
+        return res.status(400).json({ error });
+    }
+}
+
 
 export {
     saveTime,
     getReadingTime,
     getCurrentWeekDates,
     getUserScreenTimeData,
-    hasReadingTimeAnytime
+    hasReadingTimeAnytime,
+    updateReadingTimeForToday
 }
