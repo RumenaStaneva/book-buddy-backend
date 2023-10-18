@@ -166,19 +166,24 @@ const updateReadingTimeForToday = async (req: IGetUserAuthInfoRequest, res: Resp
             { timeInSecondsForTheDayReading, totalReadingGoalForTheDay, timeInSecondsLeftForAchievingReadingGoal: timeLeft },
             { new: true }
         );
-        let readingTimeSpendOnBook;
-        if (previousReadingTime) {
-            readingTimeSpendOnBook = timeInSecondsForTheDayReading - previousReadingTime?.timeInSecondsForTheDayReading;
-        } else {
-            readingTimeSpendOnBook = timeInSecondsForTheDayReading;
+        if (currentlyReadingBookId) {
+            let readingTimeSpendOnBook;
+            if (previousReadingTime) {
+                readingTimeSpendOnBook = timeInSecondsForTheDayReading - previousReadingTime?.timeInSecondsForTheDayReading;
+            } else {
+                readingTimeSpendOnBook = timeInSecondsForTheDayReading;
+            }
+            const bookReadDuringPeriod = await BookReadDuringDay.create({ date, userId, bookId: currentlyReadingBookId, timeSpendReading: readingTimeSpendOnBook });
+            return res.json({
+                updatedReadingTimeRecord,
+                bookReadDuringPeriod
+            });
         }
-        const bookReadDuringPeriod = await BookReadDuringDay.create({ date, userId, bookId: currentlyReadingBookId, timeSpendReading: readingTimeSpendOnBook })
         // console.log('updatedReadingTimeRecord', updatedReadingTimeRecord);
         // console.log('bookReadDuringPeriod', bookReadDuringPeriod);
 
         return res.json({
-            updatedReadingTimeRecord,
-            bookReadDuringPeriod
+            updatedReadingTimeRecord
         });
     } catch (error) {
         console.log(error);
