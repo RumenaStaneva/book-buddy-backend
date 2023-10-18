@@ -156,20 +156,23 @@ const updateReadingTimeForToday = async (req: IGetUserAuthInfoRequest, res: Resp
     }
 
     try {
-        const { date, timeInSecondsLeftForAchievingReadingGoal, timeInSecondsForTheDayReading } = req.body;
+        const { date, totalReadingGoalForTheDay, timeInSecondsForTheDayReading } = req.body;
+        const timeLeft = totalReadingGoalForTheDay - timeInSecondsForTheDayReading;
         const updatedReadingTimeRecord = await readingTimePerDayModel.findOneAndUpdate(
             {
                 userId, date
             },
-            { timeInSecondsForTheDayReading, timeInSecondsLeftForAchievingReadingGoal },
+            { timeInSecondsForTheDayReading, totalReadingGoalForTheDay, timeInSecondsLeftForAchievingReadingGoal: timeLeft },
             { new: true }
         );
-        // console.log('readingTimeRecord', updatedReadingTimeRecord);
+        // console.log('updatedReadingTimeRecord', updatedReadingTimeRecord);
 
         return res.json({
             updatedReadingTimeRecord
         });
     } catch (error) {
+        console.log(error);
+
         return res.status(400).json({ error });
     }
 }

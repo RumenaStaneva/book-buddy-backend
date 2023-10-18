@@ -7,6 +7,7 @@ interface ReadingTimePerDay {
     screenTimeInSeconds: number;
     goalAchievedForTheDay: boolean;
     weeklyGoalAveragePerDay: number;
+    totalReadingGoalForTheDay: number,
     timeInSecondsLeftForAchievingReadingGoal: number;
     timeInSecondsForTheDayReading: number;
 }
@@ -46,6 +47,10 @@ const readingTimePerDaySchema = new Schema<ReadingTimePerDayDocument, ReadingTim
         type: Number,
         required: true,
     },
+    totalReadingGoalForTheDay: {
+        type: Number,
+        required: true,
+    },
     timeInSecondsForTheDayReading: {
         type: Number,
         required: true,
@@ -53,7 +58,7 @@ const readingTimePerDaySchema = new Schema<ReadingTimePerDayDocument, ReadingTim
 });
 
 readingTimePerDaySchema.statics.addReadingTimePerDay = async function (data: ReadingTimePerDay): Promise<ReadingTimePerDayDocument> {
-    const { userId, screenTimeDate, date, screenTimeInSeconds, goalAchievedForTheDay, weeklyGoalAveragePerDay, timeInSecondsLeftForAchievingReadingGoal, timeInSecondsForTheDayReading } = data;
+    const { userId, screenTimeDate, date, screenTimeInSeconds, goalAchievedForTheDay, weeklyGoalAveragePerDay, totalReadingGoalForTheDay, timeInSecondsLeftForAchievingReadingGoal, timeInSecondsForTheDayReading } = data;
     try {
         const readingTimePerDay = await this.create({
             userId,
@@ -62,6 +67,7 @@ readingTimePerDaySchema.statics.addReadingTimePerDay = async function (data: Rea
             screenTimeInSeconds,
             goalAchievedForTheDay,
             weeklyGoalAveragePerDay,
+            totalReadingGoalForTheDay,
             timeInSecondsLeftForAchievingReadingGoal,
             timeInSecondsForTheDayReading,
         });
