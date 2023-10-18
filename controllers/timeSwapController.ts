@@ -2,8 +2,8 @@ import { Request, Response } from 'express';
 import User from '../models/userModel';
 import { IGetUserAuthInfoRequest } from '../types/express';
 import readingTimePerDayModel from '../models/readingTimePerDay';
-import { startOfWeek, endOfWeek, eachDayOfInterval, format, subWeeks, parse, addWeeks, addHours, startOfDay, parseISO } from 'date-fns';
-import { format as formatDate, utcToZonedTime, zonedTimeToUtc } from 'date-fns-tz';
+import BookReadDuringDay from '../models/bookReadDuringDayModel';
+import { startOfWeek, endOfWeek, eachDayOfInterval, format, subWeeks, parse, addWeeks } from 'date-fns';
 import {
     saveScreenTimeData,
     calculateWeeklyGoalAverage,
@@ -156,8 +156,9 @@ const updateReadingTimeForToday = async (req: IGetUserAuthInfoRequest, res: Resp
     }
 
     try {
-        const { date, totalReadingGoalForTheDay, timeInSecondsForTheDayReading } = req.body;
+        const { date, totalReadingGoalForTheDay, timeInSecondsForTheDayReading, currentlyReadingBookId } = req.body;
         const timeLeft = totalReadingGoalForTheDay - timeInSecondsForTheDayReading;
+        const previousReadingTime = await readingTimePerDayModel.findOne({ userId, date });
         const updatedReadingTimeRecord = await readingTimePerDayModel.findOneAndUpdate(
             {
                 userId, date
@@ -165,10 +166,19 @@ const updateReadingTimeForToday = async (req: IGetUserAuthInfoRequest, res: Resp
             { timeInSecondsForTheDayReading, totalReadingGoalForTheDay, timeInSecondsLeftForAchievingReadingGoal: timeLeft },
             { new: true }
         );
+        let readingTimeSpendOnBook;
+        if (previousReadingTime) {
+            readingTimeSpendOnBook = timeInSecondsForTheDayReading - previousReadingTime?.timeInSecondsForTheDayReading;
+        } else {
+            readingTimeSpendOnBook = timeInSecondsForTheDayReading;
+        }
+        const bookReadDuringPeriod = await BookReadDuringDay.create({ date, userId, bookId: currentlyReadingBookId, timeSpendReading: readingTimeSpendOnBook })
         // console.log('updatedReadingTimeRecord', updatedReadingTimeRecord);
+        // console.log('bookReadDuringPeriod', bookReadDuringPeriod);
 
         return res.json({
-            updatedReadingTimeRecord
+            updatedReadingTimeRecord,
+            bookReadDuringPeriod
         });
     } catch (error) {
         console.log(error);
