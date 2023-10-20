@@ -120,6 +120,9 @@ const getReadingTime = async (req: IGetUserAuthInfoRequest, res: Response) => {
             date: { $gte: utcStartDate, $lte: utcEndDate }
         }).sort({ date: 1 });
 
+        // console.log(readingTime);
+
+
         return res.status(200).json({ readingTime });
 
     } catch (error) {
@@ -158,12 +161,20 @@ const updateReadingTimeForToday = async (req: IGetUserAuthInfoRequest, res: Resp
         }
 
         const { date, totalReadingGoalForTheDay, timeInSecondsForTheDayReading, currentlyReadingBookId } = req.body;
+        console.log(date, totalReadingGoalForTheDay, timeInSecondsForTheDayReading, currentlyReadingBookId);
 
         const previouslyReadingTimeForTheDay = await readingTimePerDayModel.findOne({ userId, date });
         const previousReadingTime = previouslyReadingTimeForTheDay ? previouslyReadingTimeForTheDay.timeInSecondsForTheDayReading : 0;
 
         const goalAchieved = previousReadingTime + timeInSecondsForTheDayReading >= totalReadingGoalForTheDay;
-        const readingTime = goalAchieved ? previousReadingTime + timeInSecondsForTheDayReading : timeInSecondsForTheDayReading
+        // const readingTime = goalAchieved ? previousReadingTime + timeInSecondsForTheDayReading : timeInSecondsForTheDayReading;
+        let readingTime = timeInSecondsForTheDayReading;
+
+        console.log('previousReadingTime', previousReadingTime);
+        console.log('timeInSecondsForTheDayReading', timeInSecondsForTheDayReading);
+        console.log('readingTime', readingTime);
+
+
         const timeLeft = goalAchieved ? 0 : totalReadingGoalForTheDay - timeInSecondsForTheDayReading;
 
         const updatedReadingTimeRecord = await updateReadingTime(userId, date, readingTime, totalReadingGoalForTheDay, timeLeft, goalAchieved);
@@ -176,6 +187,7 @@ const updateReadingTimeForToday = async (req: IGetUserAuthInfoRequest, res: Resp
                 bookReadDuringPeriod = await updateBookReadDuringDay(userId, date, currentlyReadingBookId, readingTimeSpendOnBook);
             }
         }
+        console.log(updatedReadingTimeRecord);
 
         return res.json({
             updatedReadingTimeRecord,
