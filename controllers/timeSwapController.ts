@@ -179,7 +179,7 @@ const updateReadingTimeForToday = async (req: IGetUserAuthInfoRequest, res: Resp
 
         return res.json({
             updatedReadingTimeRecord,
-            bookReadDuringPeriod
+            bookReadDuringPeriod: bookReadDuringPeriod ? bookReadDuringPeriod : null
         });
     } catch (error) {
         console.error(error);

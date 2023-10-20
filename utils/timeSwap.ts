@@ -77,21 +77,23 @@ async function updateReadingTime(userId: string, date: Date, timeInSecondsForThe
 async function calculateReadingTimeSpendOnBook(previousTimeInSecondsForTheDayReading: number, date: Date, userId: string, currentlyReadingBookId: string) {
     const previouslyReadingTimeForTheDay = await readingTimePerDayModel.findOne({ userId, date });
     const currentTime = previouslyReadingTimeForTheDay ? previouslyReadingTimeForTheDay.timeInSecondsForTheDayReading : 0;
+
     if (currentlyReadingBookId) {
-        //something here is not working
         const existingBook = await BookReadDuringDay.findOne(
             { userId, date, bookId: currentlyReadingBookId });
         if (existingBook) {
             return currentTime - previousTimeInSecondsForTheDayReading + existingBook?.timeSpendReading || 0
         } else {
-            await BookReadDuringDay.create({
-                userId,
-                date,
-                bookId: currentlyReadingBookId,
-                timeSpendReading: 0
-            });
-            console.log("New book record created for the day.");
-            return currentTime - previousTimeInSecondsForTheDayReading;
+            if (currentTime > 0) {
+                await BookReadDuringDay.create({
+                    userId,
+                    date,
+                    bookId: currentlyReadingBookId,
+                    timeSpendReading: currentTime
+                });
+                console.log("New book record created for the day.");
+                return currentTime - previousTimeInSecondsForTheDayReading;
+            }
         }
     }
     return currentTime - previousTimeInSecondsForTheDayReading;
