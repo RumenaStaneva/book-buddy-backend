@@ -162,10 +162,11 @@ const updateReadingTimeForToday = async (req: IGetUserAuthInfoRequest, res: Resp
         const previouslyReadingTimeForTheDay = await readingTimePerDayModel.findOne({ userId, date });
         const previousReadingTime = previouslyReadingTimeForTheDay ? previouslyReadingTimeForTheDay.timeInSecondsForTheDayReading : 0;
 
-        const goalAchieved = timeInSecondsForTheDayReading >= totalReadingGoalForTheDay;
+        const goalAchieved = previousReadingTime + timeInSecondsForTheDayReading >= totalReadingGoalForTheDay;
+        const readingTime = goalAchieved ? previousReadingTime + timeInSecondsForTheDayReading : timeInSecondsForTheDayReading
         const timeLeft = goalAchieved ? 0 : totalReadingGoalForTheDay - timeInSecondsForTheDayReading;
 
-        const updatedReadingTimeRecord = await updateReadingTime(userId, date, timeInSecondsForTheDayReading, totalReadingGoalForTheDay, timeLeft, goalAchieved);
+        const updatedReadingTimeRecord = await updateReadingTime(userId, date, readingTime, totalReadingGoalForTheDay, timeLeft, goalAchieved);
         let bookReadDuringPeriod = null;
 
         if (currentlyReadingBookId) {

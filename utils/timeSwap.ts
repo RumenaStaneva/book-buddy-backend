@@ -78,7 +78,7 @@ async function calculateReadingTimeSpendOnBook(previousTimeInSecondsForTheDayRea
     const previouslyReadingTimeForTheDay = await readingTimePerDayModel.findOne({ userId, date });
     const currentTime = previouslyReadingTimeForTheDay ? previouslyReadingTimeForTheDay.timeInSecondsForTheDayReading : 0;
     if (currentlyReadingBookId) {
-
+        //something here is not working
         const existingBook = await BookReadDuringDay.findOne(
             { userId, date, bookId: currentlyReadingBookId });
         if (existingBook) {
