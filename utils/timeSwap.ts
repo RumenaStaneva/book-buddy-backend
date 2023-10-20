@@ -1,5 +1,6 @@
 import screenTimePerDayModel from '../models/screenTimePerDayModel';
 import readingTimePerDayModel from '../models/readingTimePerDay';
+import BookReadDuringDay from '../models/bookReadDuringDayModel';
 import { startOfWeek, addWeeks, endOfWeek, eachDayOfInterval, subWeeks, } from 'date-fns';
 
 async function saveScreenTimeData(userId: string, screenTimeData: any[]) {
@@ -58,14 +59,50 @@ const getStartOfCurrentWeek = (): Date => {
     return firstDayOfWeek;
 };
 
-const getStartOfPreviousWeek = (date: Date): Date => {
-    const lastWeekStart = startOfWeek(subWeeks(date, 1), { weekStartsOn: 1 })
-    return lastWeekStart;
-};
 
 function convertToMMDDFormat(inputDate: string) {
     const [year, month, day] = inputDate.split('/').map(Number);
     return new Date(year, month - 1, day + 1);
+}
+
+
+async function updateReadingTime(userId: string, date: Date, timeInSecondsForTheDayReading: number, totalReadingGoalForTheDay: number, timeLeft: number, goalAchieved: boolean) {
+    return await readingTimePerDayModel.findOneAndUpdate(
+        { userId, date },
+        { timeInSecondsForTheDayReading, totalReadingGoalForTheDay, timeInSecondsLeftForAchievingReadingGoal: timeLeft, goalAchievedForTheDay: goalAchieved },
+        { new: true }
+    );
+}
+
+async function calculateReadingTimeSpendOnBook(previousTimeInSecondsForTheDayReading: number, date: Date, userId: string, currentlyReadingBookId: string) {
+    const previouslyReadingTimeForTheDay = await readingTimePerDayModel.findOne({ userId, date });
+    const currentTime = previouslyReadingTimeForTheDay ? previouslyReadingTimeForTheDay.timeInSecondsForTheDayReading : 0;
+    if (currentlyReadingBookId) {
+
+        const existingBook = await BookReadDuringDay.findOne(
+            { userId, date, bookId: currentlyReadingBookId });
+        if (existingBook) {
+            return currentTime - previousTimeInSecondsForTheDayReading + existingBook?.timeSpendReading || 0
+        } else {
+            await BookReadDuringDay.create({
+                userId,
+                date,
+                bookId: currentlyReadingBookId,
+                timeSpendReading: 0
+            });
+            console.log("New book record created for the day.");
+            return currentTime - previousTimeInSecondsForTheDayReading;
+        }
+    }
+    return currentTime - previousTimeInSecondsForTheDayReading;
+}
+
+async function updateBookReadDuringDay(userId: string, date: Date, currentlyReadingBookId: string, readingTimeSpendOnBook: number) {
+    return await BookReadDuringDay.findOneAndUpdate(
+        { userId, date, bookId: currentlyReadingBookId },
+        { timeSpendReading: readingTimeSpendOnBook },
+        { new: true }
+    );
 }
 
 
@@ -75,6 +112,9 @@ export {
     prepareReadingTimeData,
     saveReadingTimeData,
     getStartOfCurrentWeek,
-    getStartOfPreviousWeek,
-    convertToMMDDFormat
+
+
+    updateReadingTime,
+    calculateReadingTimeSpendOnBook,
+    updateBookReadDuringDay
 }

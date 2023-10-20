@@ -1,8 +1,7 @@
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import User from '../models/userModel';
 import { IGetUserAuthInfoRequest } from '../types/express';
 import readingTimePerDayModel from '../models/readingTimePerDay';
-import BookReadDuringDay from '../models/bookReadDuringDayModel';
 import { startOfWeek, endOfWeek, eachDayOfInterval, format, subWeeks, parse, addWeeks } from 'date-fns';
 import {
     saveScreenTimeData,
@@ -10,8 +9,10 @@ import {
     prepareReadingTimeData,
     saveReadingTimeData,
     getStartOfCurrentWeek,
-    getStartOfPreviousWeek,
-    convertToMMDDFormat
+
+    updateReadingTime,
+    calculateReadingTimeSpendOnBook,
+    updateBookReadDuringDay
 } from '../utils/timeSwap'
 import screenTimePerDayModel from '../models/screenTimePerDayModel';
 
@@ -149,48 +150,41 @@ const hasReadingTimeAnytime = async (req: IGetUserAuthInfoRequest, res: Response
 }
 
 const updateReadingTimeForToday = async (req: IGetUserAuthInfoRequest, res: Response) => {
-    const userId = req.user?._id;
-    const existingUser = await User.findOne({ _id: userId });
-    if (!existingUser) {
-        return res.status(400).json({ error: 'User does not exist' });
-    }
-
     try {
-        const { date, totalReadingGoalForTheDay, timeInSecondsForTheDayReading, currentlyReadingBookId } = req.body;
-        const timeLeft = totalReadingGoalForTheDay - timeInSecondsForTheDayReading;
-        const previousReadingTime = await readingTimePerDayModel.findOne({ userId, date });
-        const updatedReadingTimeRecord = await readingTimePerDayModel.findOneAndUpdate(
-            {
-                userId, date
-            },
-            { timeInSecondsForTheDayReading, totalReadingGoalForTheDay, timeInSecondsLeftForAchievingReadingGoal: timeLeft },
-            { new: true }
-        );
-        if (currentlyReadingBookId) {
-            let readingTimeSpendOnBook;
-            if (previousReadingTime) {
-                readingTimeSpendOnBook = timeInSecondsForTheDayReading - previousReadingTime?.timeInSecondsForTheDayReading;
-            } else {
-                readingTimeSpendOnBook = timeInSecondsForTheDayReading;
-            }
-            const bookReadDuringPeriod = await BookReadDuringDay.create({ date, userId, bookId: currentlyReadingBookId, timeSpendReading: readingTimeSpendOnBook });
-            return res.json({
-                updatedReadingTimeRecord,
-                bookReadDuringPeriod
-            });
+        const userId = req.user?._id;
+        const existingUser = await User.findOne({ _id: userId });
+        if (!existingUser) {
+            return res.status(400).json({ error: 'User does not exist' });
         }
-        // console.log('updatedReadingTimeRecord', updatedReadingTimeRecord);
-        // console.log('bookReadDuringPeriod', bookReadDuringPeriod);
+
+        const { date, totalReadingGoalForTheDay, timeInSecondsForTheDayReading, currentlyReadingBookId } = req.body;
+
+        const previouslyReadingTimeForTheDay = await readingTimePerDayModel.findOne({ userId, date });
+        const previousReadingTime = previouslyReadingTimeForTheDay ? previouslyReadingTimeForTheDay.timeInSecondsForTheDayReading : 0;
+
+        const goalAchieved = timeInSecondsForTheDayReading >= totalReadingGoalForTheDay;
+        const timeLeft = goalAchieved ? 0 : totalReadingGoalForTheDay - timeInSecondsForTheDayReading;
+
+        const updatedReadingTimeRecord = await updateReadingTime(userId, date, timeInSecondsForTheDayReading, totalReadingGoalForTheDay, timeLeft, goalAchieved);
+        let bookReadDuringPeriod = null;
+
+        if (currentlyReadingBookId) {
+            const readingTimeSpendOnBook = await calculateReadingTimeSpendOnBook(previousReadingTime, date, userId, currentlyReadingBookId);
+
+            if (readingTimeSpendOnBook > 0) {
+                bookReadDuringPeriod = await updateBookReadDuringDay(userId, date, currentlyReadingBookId, readingTimeSpendOnBook);
+            }
+        }
 
         return res.json({
-            updatedReadingTimeRecord
+            updatedReadingTimeRecord,
+            bookReadDuringPeriod
         });
     } catch (error) {
-        console.log(error);
-
-        return res.status(400).json({ error });
+        console.error(error);
+        return res.status(500).json({ error: 'Internal Server Error' });
     }
-}
+};
 
 
 export {
