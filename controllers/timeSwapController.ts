@@ -161,7 +161,7 @@ const updateReadingTimeForToday = async (req: IGetUserAuthInfoRequest, res: Resp
         }
 
         const { date, totalReadingGoalForTheDay, timeInSecondsForTheDayReading, currentlyReadingBookId } = req.body;
-        console.log(date, totalReadingGoalForTheDay, timeInSecondsForTheDayReading, currentlyReadingBookId);
+        // console.log(date, totalReadingGoalForTheDay, timeInSecondsForTheDayReading, currentlyReadingBookId);
 
         const previouslyReadingTimeForTheDay = await readingTimePerDayModel.findOne({ userId, date });
         const previousReadingTime = previouslyReadingTimeForTheDay ? previouslyReadingTimeForTheDay.timeInSecondsForTheDayReading : 0;
@@ -170,9 +170,9 @@ const updateReadingTimeForToday = async (req: IGetUserAuthInfoRequest, res: Resp
         // const readingTime = goalAchieved ? previousReadingTime + timeInSecondsForTheDayReading : timeInSecondsForTheDayReading;
         let readingTime = timeInSecondsForTheDayReading;
 
-        console.log('previousReadingTime', previousReadingTime);
-        console.log('timeInSecondsForTheDayReading', timeInSecondsForTheDayReading);
-        console.log('readingTime', readingTime);
+        // console.log('previousReadingTime', previousReadingTime);
+        // console.log('timeInSecondsForTheDayReading', timeInSecondsForTheDayReading);
+        // console.log('readingTime', readingTime);
 
 
         const timeLeft = goalAchieved ? 0 : totalReadingGoalForTheDay - timeInSecondsForTheDayReading;
@@ -187,7 +187,7 @@ const updateReadingTimeForToday = async (req: IGetUserAuthInfoRequest, res: Resp
                 bookReadDuringPeriod = await updateBookReadDuringDay(userId, date, currentlyReadingBookId, readingTimeSpendOnBook);
             }
         }
-        console.log(updatedReadingTimeRecord);
+        // console.log(updatedReadingTimeRecord);
 
         return res.json({
             updatedReadingTimeRecord,
