@@ -100,10 +100,17 @@ const getReadingTime = async (req: IGetUserAuthInfoRequest, res: Response) => {
         const startDate = String(req.query.startDate);
         const endDate = String(req.query.endDate);
 
-        // console.log(startDate);
-        // console.log(endDate);
         if (!startDate || !endDate) {
             return res.status(400).json({ error: 'startDate and endDate are required parameters.' });
+        }
+
+        //todo fix thats
+        if (startDate == 'anytime' && endDate == 'anytime') {
+            const readingTime = await readingTimePerDayModel.find({
+                userId: userId
+            }).sort({ date: 1 });
+
+            return res.status(200).json({ readingTime });
         }
         const parsedStartDate = new Date(startDate);
         const parsedEndDate = new Date(endDate);
