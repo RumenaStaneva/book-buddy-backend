@@ -1,42 +1,42 @@
-import screenTimePerDayModel from '../models/screenTimePerDayModel';
 import readingTimePerDayModel from '../models/readingTimePerDay';
 import BookReadDuringDay from '../models/bookReadDuringDayModel';
 import { startOfWeek, addWeeks, endOfWeek, eachDayOfInterval, subWeeks, } from 'date-fns';
 
-async function saveScreenTimeData(userId: string, screenTimeData: any[]) {
-    return await Promise.all(screenTimeData.map(async (data: any) => {
-        const date = convertToMMDDFormat(data.date);
-        return await screenTimePerDayModel.addScreenTimePerDay({
-            userId,
-            date: date,
-            timeInSeconds: data.timeInSecond
-        });
-    }));
-}
+// async function saveScreenTimeData(userId: string, screenTimeData: any[]) {
+//     return await Promise.all(screenTimeData.map(async (data: any) => {
+//         const date = convertToMMDDFormat(data.date);
+//         return await screenTimePerDayModel.addScreenTimePerDay({
+//             userId,
+//             date: date,
+//             timeInSeconds: data.timeInSecond
+//         });
+//     }));
+// }
 
 function calculateWeeklyGoalAverage(screenTimeData: any[]): number {
     const summaryWeeklyGoalAveragePerDay = screenTimeData.reduce((summary: number, data: any) => {
-        return summary + Number(data.timeInSecond);
+        return summary + Number(data.screenTimeInSeconds);
     }, 0);
     return Math.round(summaryWeeklyGoalAveragePerDay / 7);
 }
 
-function prepareReadingTimeData(savedScreenTimeData: any[], weeklyGoalAveragePerDay: number) {
-    const startOfNextWeek = startOfWeek(addWeeks(savedScreenTimeData[0].date, 1), { weekStartsOn: 2 });
+function prepareReadingTimeData(screenTimeDataForTheWeek: any[], weeklyGoalAveragePerDay: number) {
+    const startOfNextWeek = startOfWeek(addWeeks(screenTimeDataForTheWeek[0].date, 1), { weekStartsOn: 2 });
     const endOfNextWeek = endOfWeek(startOfNextWeek, { weekStartsOn: 2 });
     const interval = { start: startOfNextWeek, end: endOfNextWeek };
     const nextWeekDays = eachDayOfInterval(interval);
-    return savedScreenTimeData.map((data: any, index) => {
+    return screenTimeDataForTheWeek.map((data: any, index) => {
 
         return {
             date: nextWeekDays[index],
-            screenTimeDate: savedScreenTimeData[index].date,
-            screenTimeInSeconds: data.timeInSeconds
+            screenTimeDate: screenTimeDataForTheWeek[index].date,
+            screenTimeInSeconds: data.screenTimeInSeconds,
+            weeklyGoalAveragePerDay
         };
     });
 }
 
-async function saveReadingTimeData(userId: string, readingTimeData: any[], weeklyGoalAveragePerDay: number) {
+async function saveReadingTimeData(userId: string, readingTimeData: any[]) {
     return await Promise.all(readingTimeData.map(async (data: any) => {
 
         return await readingTimePerDayModel.addReadingTimePerDay({
@@ -45,7 +45,7 @@ async function saveReadingTimeData(userId: string, readingTimeData: any[], weekl
             date: data.date,
             screenTimeInSeconds: data.screenTimeInSeconds,
             goalAchievedForTheDay: false,
-            weeklyGoalAveragePerDay,
+            weeklyGoalAveragePerDay: data.weeklyGoalAveragePerDay,
             totalReadingGoalForTheDay: data.screenTimeInSeconds,
             timeInSecondsLeftForAchievingReadingGoal: data.screenTimeInSeconds,
             timeInSecondsForTheDayReading: 0
@@ -109,12 +109,12 @@ async function updateBookReadDuringDay(userId: string, date: Date, currentlyRead
 
 
 export {
-    saveScreenTimeData,
+    // saveScreenTimeData,
     calculateWeeklyGoalAverage,
     prepareReadingTimeData,
     saveReadingTimeData,
     getStartOfCurrentWeek,
-
+    convertToMMDDFormat,
 
     updateReadingTime,
     calculateReadingTimeSpendOnBook,
