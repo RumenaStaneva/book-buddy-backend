@@ -227,7 +227,8 @@ const signupWithGoogle = async (req: Request, res: Response) => {
                 res.status(200).json({ email, token, username, isVerified, profilePicture });
             } else {
                 user = await User.signUpWithGoogleAuth(userIsVerified.userId, userIsVerified.userEmail!);
-                res.status(200).json({ user });
+                const token = createToken(user._id);
+                res.status(200).json({ email: user.email, token, username: user.username, isVerified: user.isVerified, profilePicture: user.profilePicture });
             }
         }
     } catch (error: any) {
