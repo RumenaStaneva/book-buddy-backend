@@ -4,17 +4,15 @@ import { IGetUserAuthInfoRequest } from '../types/express';
 import readingTimePerDayModel from '../models/readingTimePerDay';
 import { startOfWeek, endOfWeek, eachDayOfInterval, format, subWeeks, parse, addWeeks } from 'date-fns';
 import {
-    saveScreenTimeData,
     calculateWeeklyGoalAverage,
     prepareReadingTimeData,
     saveReadingTimeData,
     getStartOfCurrentWeek,
-
+    convertToMMDDFormat,
     updateReadingTime,
     calculateReadingTimeSpendOnBook,
     updateBookReadDuringDay
 } from '../utils/timeSwap'
-import screenTimePerDayModel from '../models/screenTimePerDayModel';
 
 const getCurrentWeekDates = async (req: IGetUserAuthInfoRequest, res: Response) => {
     try {
@@ -24,8 +22,7 @@ const getCurrentWeekDates = async (req: IGetUserAuthInfoRequest, res: Response) 
         const lastWeekStart = startOfWeek(subWeeks(currentDate, 1), { weekStartsOn: 1 });
         const lastWeekEnd = endOfWeek(subWeeks(currentDate, 1), { weekStartsOn: 1 });
         const datesFromLastWeek = eachDayOfInterval({ start: lastWeekStart, end: lastWeekEnd });
-
-        const hasAnyWeekData = await screenTimePerDayModel.exists({
+        const hasAnyWeekData = await readingTimePerDayModel.exists({
             userId
         })
         const currentWeekStart = getStartOfCurrentWeek();
@@ -36,6 +33,7 @@ const getCurrentWeekDates = async (req: IGetUserAuthInfoRequest, res: Response) 
         });
 
         const formattedDates = datesFromLastWeek.map(date => format(date, 'MMMM dd, yyyy'));
+
         res.status(200).json({ hasAnyWeekData, hasCurrentWeekData, weekDates: formattedDates });
     } catch (error) {
         console.error(error);
@@ -67,21 +65,27 @@ const saveTime = async (req: IGetUserAuthInfoRequest, res: Response) => {
         const startOfWeekDay = startOfWeek(addWeeks(startDate, 1), { weekStartsOn: 2 });
         const lastWeekEnd = endOfWeek(addWeeks(startDate, 1), { weekStartsOn: 2 });
 
-        const existingScreenTimeData = await readingTimePerDayModel.find({
+        const existingReadingTimeData = await readingTimePerDayModel.find({
             userId: userId,
             screenTimeDate: { $gte: startOfWeekDay, $lte: lastWeekEnd }
         });
 
-        if (existingScreenTimeData.length > 0) {
+        if (existingReadingTimeData.length > 0) {
             return res.status(400).json({ error: 'Screen time data already submitted for this week' });
         }
 
-        const savedScreenTimeData = await saveScreenTimeData(userId, screenTimeData);
-        const weeklyGoalAveragePerDay = calculateWeeklyGoalAverage(screenTimeData);
-        const readingTimeData = prepareReadingTimeData(savedScreenTimeData, weeklyGoalAveragePerDay);
-        const savedReadingTimeData = await saveReadingTimeData(userId, readingTimeData, weeklyGoalAveragePerDay);
+        const screenTimeDataForTheWeek = screenTimeData.map((data: any) => {
+            const date = convertToMMDDFormat(data.date);
+            const screenTimeInSeconds = data.timeInSeconds;
+            return { date, screenTimeInSeconds };
+        })
+        const weeklyGoalAveragePerDay = calculateWeeklyGoalAverage(screenTimeDataForTheWeek);
+        const readingTimeData = prepareReadingTimeData(screenTimeDataForTheWeek, weeklyGoalAveragePerDay);
+
+        const savedReadingTimeData = await saveReadingTimeData(userId, readingTimeData);
+        console.log(savedReadingTimeData);
+
         return res.status(200).json({
-            savedScreenTimeData,
             savedReadingTimeData
         })
     } catch (error: any) {
@@ -104,14 +108,6 @@ const getReadingTime = async (req: IGetUserAuthInfoRequest, res: Response) => {
             return res.status(400).json({ error: 'startDate and endDate are required parameters.' });
         }
 
-        //todo fix thats
-        if (startDate == 'anytime' && endDate == 'anytime') {
-            const readingTime = await readingTimePerDayModel.find({
-                userId: userId
-            }).sort({ date: 1 });
-
-            return res.status(200).json({ readingTime });
-        }
         const parsedStartDate = new Date(startDate);
         const parsedEndDate = new Date(endDate);
 
@@ -119,16 +115,10 @@ const getReadingTime = async (req: IGetUserAuthInfoRequest, res: Response) => {
         const utcStartDate = new Date(parsedStartDate.getTime() - parsedStartDate.getTimezoneOffset() * 60000);
         const utcEndDate = new Date(parsedEndDate.getTime() - parsedEndDate.getTimezoneOffset() * 60000);
 
-        // console.log('utcStartDate', utcStartDate);
-        // console.log('utcEndDate', utcEndDate);
-
         const readingTime = await readingTimePerDayModel.find({
             userId: userId,
             date: { $gte: utcStartDate, $lte: utcEndDate }
         }).sort({ date: 1 });
-
-        // console.log(readingTime);
-
 
         return res.status(200).json({ readingTime });
 
@@ -168,22 +158,11 @@ const updateReadingTimeForToday = async (req: IGetUserAuthInfoRequest, res: Resp
         }
 
         const { date, totalReadingGoalForTheDay, timeInSecondsForTheDayReading, currentlyReadingBookId } = req.body;
-        // console.log(date, totalReadingGoalForTheDay, timeInSecondsForTheDayReading, currentlyReadingBookId);
-
         const previouslyReadingTimeForTheDay = await readingTimePerDayModel.findOne({ userId, date });
         const previousReadingTime = previouslyReadingTimeForTheDay ? previouslyReadingTimeForTheDay.timeInSecondsForTheDayReading : 0;
-
         const goalAchieved = previousReadingTime + timeInSecondsForTheDayReading >= totalReadingGoalForTheDay;
-        // const readingTime = goalAchieved ? previousReadingTime + timeInSecondsForTheDayReading : timeInSecondsForTheDayReading;
         let readingTime = timeInSecondsForTheDayReading;
-
-        // console.log('previousReadingTime', previousReadingTime);
-        // console.log('timeInSecondsForTheDayReading', timeInSecondsForTheDayReading);
-        // console.log('readingTime', readingTime);
-
-
         const timeLeft = goalAchieved ? 0 : totalReadingGoalForTheDay - timeInSecondsForTheDayReading;
-
         const updatedReadingTimeRecord = await updateReadingTime(userId, date, readingTime, totalReadingGoalForTheDay, timeLeft, goalAchieved);
         let bookReadDuringPeriod = null;
 
@@ -194,7 +173,6 @@ const updateReadingTimeForToday = async (req: IGetUserAuthInfoRequest, res: Resp
                 bookReadDuringPeriod = await updateBookReadDuringDay(userId, date, currentlyReadingBookId, readingTimeSpendOnBook);
             }
         }
-        // console.log(updatedReadingTimeRecord);
 
         return res.json({
             updatedReadingTimeRecord,
