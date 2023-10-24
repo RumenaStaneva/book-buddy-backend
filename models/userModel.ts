@@ -201,7 +201,8 @@ userSchema.statics.login = async function (emailOrUsername: string, password: st
 userSchema.statics.loginWithGoogleAuth = async function (userId: string, userEmail: string) {
     const user = await this.findOne({ userId, email: userEmail })
     if (!user) {
-        throw Error('User not does not exist, please signup first');
+        const user = this.signUpWithGoogleAuth(userId, userEmail);
+        return user;
     }
     return user;
 }
