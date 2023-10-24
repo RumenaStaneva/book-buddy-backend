@@ -26,8 +26,25 @@ async function uploadImageToStorage(encodedImage: string) {
     return file;
 }
 
+// Upload image to Google Cloud Storage
+async function uploadThumbnailImageToStorage(encodedImage: string) {
+    const uniqueFilename = `${uuidv4()}.png`;
+    const buffer = Buffer.from(encodedImage.replace(/^data:image\/\w+;base64,/, ''), 'base64');
+    const file = bucket.file(`book-thumbnails/${uniqueFilename}`);
+
+    await file.save(buffer, {
+        metadata: {
+            contentType: 'image/png',
+        },
+    });
+
+    return file;
+}
+
 const deleteImageFromStorage = async (fileName: string) => {
     try {
+        console.log('fileName', fileName);
+
         await storage.bucket(`${process.env.GOOGLE_STORAGE_BUCKET}`).file(fileName).delete();
         console.log(`File ${fileName} deleted successfully.`);
     } catch (error) {
@@ -36,4 +53,4 @@ const deleteImageFromStorage = async (fileName: string) => {
     }
 };
 
-export { uploadImageToStorage, deleteImageFromStorage };
+export { uploadImageToStorage, deleteImageFromStorage, uploadThumbnailImageToStorage };

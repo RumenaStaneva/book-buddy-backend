@@ -160,7 +160,6 @@ bookSchema.statics.createBook = async function (data) {
             body(thumbnail).trim().run(this),
             body(category).notEmpty().withMessage('Category is required').isIn(Object.values(CategoryType)).run(this),
             body(pageCount).notEmpty().withMessage('Page count is required').isInt({ min: 1 }).withMessage('Page count must be a positive integer'),
-            body(notes).isArray().run(this),
             body(progress).isNumeric().run(this),
             body(shelf).notEmpty().withMessage('Shelf is required').isIn(Object.values(ShelfType)).run(this),
         ]);
@@ -170,7 +169,7 @@ bookSchema.statics.createBook = async function (data) {
         if (existingBook) {
             throw new Error('Book already exists in your shelf');
         } else {
-            const book = await this.create({ bookApiId, owner, title, authors, description, publisher, thumbnail, category, pageCount, notes, progress, shelf })
+            const book = await this.create({ bookApiId, owner, title, authors, description, publisher, thumbnail, category, pageCount, progress, shelf })
             return book;
         }
 

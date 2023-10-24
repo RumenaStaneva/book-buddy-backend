@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import Book from '../models/bookModel';
 import User from '../models/userModel';
 import { IGetUserAuthInfoRequest } from '../types/express';
+import { deleteImageFromStorage, uploadThumbnailImageToStorage } from '../utils/googlestorage'
 dotenv.config();
 
 let KEY = process.env.KEY;
@@ -47,34 +48,43 @@ const getUserLibrary = async (req: IGetUserAuthInfoRequest, res: Response) => {
     }
 }
 
-const addToShelf = async (req: Request, res: Response) => {
+const addToShelf = async (req: IGetUserAuthInfoRequest, res: Response) => {
 
     const thumbnail = req.body.thumbnail;
     const {
         bookApiId,
-        userEmail,
         title,
         authors,
         description,
         publisher,
         category,
         pageCount,
-        notes,
         progress,
         shelf
     } = req.body;
 
-    const user = await User.findOne({ email: userEmail });
+    const userId = req.user?._id;
+    const user = await User.findOne({ _id: userId });
     let owner;
     if (!user) {
-        console.log('No such user in DB');
-        return res.status(401).json({ error: 'No such user in DB' });
+        console.log('User does not exist');
+        return res.status(401).json({ error: 'User does not exist' });
     } else {
         owner = user._id.toString();
     }
 
+    const maxFileSizeInBytes = 10 * 1024 * 1024; // 10MB
+    const encodedImage = thumbnail;
+    if (encodedImage.length > maxFileSizeInBytes) {
+        return res.status(400).json({ error: 'Uploaded image is too large. Please choose a smaller image.' });
+    }
     try {
-        const book = await Book.createBook({ bookApiId, owner, title, authors, description, publisher, thumbnail, category, pageCount, notes, progress, shelf });
+        //add the new encoded image to book 
+        const encodedImage = req.body.thumbnail;
+        const uploadedFile = await uploadThumbnailImageToStorage(encodedImage);
+        const thumbnailUrl = uploadedFile.publicUrl();
+
+        const book = await Book.createBook({ bookApiId, owner, title, authors, description, publisher, thumbnail: thumbnailUrl, category, pageCount, progress, shelf });
         res.status(200).json({ book });
     } catch (error: any) {
         const lastIndex = error.message.lastIndexOf(":") + 1;
@@ -95,8 +105,11 @@ const updateBook = async (req: IGetUserAuthInfoRequest, res: Response) => {
         progress,
         shelf,
         pageCount
-    } = req.body.book;
-
+    } = req.body;
+    const user = await User.findOne({ _id: userId });
+    if (!user) {
+        return res.status(401).json({ error: 'User does not exist' });
+    }
     try {
         const book = await Book.findOne({ owner: userId, _id: _id });
         if (!book) {
@@ -116,12 +129,24 @@ const updateBook = async (req: IGetUserAuthInfoRequest, res: Response) => {
             book.progress = updatedProgress;
         }
 
+        if (book.thumbnail) {
+            const filePath = new URL(book.thumbnail).pathname;
+            const decodedFilePath = decodeURIComponent(filePath);
+            const fileName = decodedFilePath.replace(`/${process.env.GOOGLE_STORAGE_BUCKET}/`, '');
+            await deleteImageFromStorage(fileName);
+        }
+
         book.title = title;
         book.authors = authors;
         book.description = description;
         book.category = category;
         book.pageCount = pageCount;
-        book.thumbnail = thumbnail;
+
+        //add the new encoded image to book 
+        const encodedImage = thumbnail;
+        const uploadedFile = await uploadThumbnailImageToStorage(encodedImage);
+        const thumbnailUrl = uploadedFile.publicUrl();
+        book.thumbnail = thumbnailUrl;
         await book.save();
         res.status(200).json({ book });
 
@@ -184,6 +209,12 @@ const deleteBook = async (req: Request, res: Response) => {
     const bookId = req.query.bookId;
     try {
         const deletedBook = await Book.findByIdAndDelete(bookId);
+        if (deletedBook && deletedBook.thumbnail) {
+            const filePath = new URL(deletedBook.thumbnail).pathname;
+            const decodedFilePath = decodeURIComponent(filePath);
+            const fileName = decodedFilePath.replace(`/${process.env.GOOGLE_STORAGE_BUCKET}/`, '');
+            await deleteImageFromStorage(fileName);
+        }
         res.status(200).json({ message: 'Book deleted succesfuly', deletedBook });
     } catch (error) {
         res.status(400).json({ error: 'Error while deleting book' });
