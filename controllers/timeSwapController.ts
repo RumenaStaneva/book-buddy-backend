@@ -138,7 +138,7 @@ const hasReadingTimeAnytime = async (req: IGetUserAuthInfoRequest, res: Response
         const readingTime = await readingTimePerDayModel.find({
             userId: userId,
         }).sort({ date: 1 });
-        if (!readingTime) {
+        if (!readingTime || readingTime.length <= 0) {
             return res.status(200).json({ hasReadingTime: false });
         }
 
