@@ -113,17 +113,6 @@ const validateScreenTimeData = (screenTimeData: any) => {
     }
 
     for (const data of screenTimeData) {
-        if (!data.date || !data.time) {
-            throw new Error('Invalid screen time data format. Each entry must have a date and time.');
-        }
-
-        const dateRegex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z$/;
-        const timeRegex = /^\d+$/;
-
-        if (!dateRegex.test(data.date) || !timeRegex.test(data.time)) {
-            throw new Error('Invalid date or time format. Date must be in ISO format and time must be in seconds.');
-        }
-
         const timeInSeconds = parseInt(data.time, 10);
         if (timeInSeconds < 0 || timeInSeconds > 86400) {
             throw new Error('Invalid time duration. Time must be between 0 and 24 hours.');
