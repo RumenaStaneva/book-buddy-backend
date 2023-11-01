@@ -1,17 +1,6 @@
 import readingTimePerDayModel from '../models/readingTimePerDay';
 import BookReadDuringDay from '../models/bookReadDuringDayModel';
-import { startOfWeek, addWeeks, endOfWeek, eachDayOfInterval, subWeeks, } from 'date-fns';
-
-// async function saveScreenTimeData(userId: string, screenTimeData: any[]) {
-//     return await Promise.all(screenTimeData.map(async (data: any) => {
-//         const date = convertToMMDDFormat(data.date);
-//         return await screenTimePerDayModel.addScreenTimePerDay({
-//             userId,
-//             date: date,
-//             timeInSeconds: data.timeInSecond
-//         });
-//     }));
-// }
+import { startOfWeek, addWeeks, endOfWeek, eachDayOfInterval } from 'date-fns';
 
 function calculateWeeklyGoalAverage(screenTimeData: any[]): number {
     const summaryWeeklyGoalAveragePerDay = screenTimeData.reduce((summary: number, data: any) => {
@@ -125,7 +114,6 @@ const validateScreenTimeData = (screenTimeData: any) => {
 
 
 export {
-    // saveScreenTimeData,
     calculateWeeklyGoalAverage,
     prepareReadingTimeData,
     saveReadingTimeData,

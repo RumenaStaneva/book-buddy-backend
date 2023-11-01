@@ -5,6 +5,7 @@ import Book from '../models/bookModel';
 import User from '../models/userModel';
 import { IGetUserAuthInfoRequest } from '../types/express';
 import { deleteImageFromStorage, uploadThumbnailImageToStorage, uploadImageByUrlToStorage, isBase64 } from '../utils/googlestorage'
+
 dotenv.config();
 
 let KEY = process.env.KEY;
@@ -80,41 +81,39 @@ const addToShelf = async (req: IGetUserAuthInfoRequest, res: Response) => {
     }
 
     try {
+        const book = await Book.createBook({ bookApiId, owner, title, authors, description, publisher, thumbnail, category, pageCount, progress, shelf });
+
         let thumbnailUrl = null;
         if (thumbnail.startsWith('http://books.google.com/books')) {
             // If the thumbnail URL is from Google Books API, upload the URL directly
-
             try {
                 const uploadedFile = await uploadImageByUrlToStorage(thumbnail);
                 thumbnailUrl = uploadedFile.publicUrl();
-                console.log('thumbnailUrl', thumbnailUrl);
-
-                const book = await Book.createBook({ bookApiId, owner, title, authors, description, publisher, thumbnail: thumbnailUrl, category, pageCount, progress, shelf });
-                res.status(200).json({ book });
             } catch (error) {
-                console.error('Error uploading Google Books API thumbnail:', error);
-                return res.status(500).json({ error: 'Failed to upload Google Books API thumbnail' });
+                throw new Error('Failed to upload Google Books API thumbnail');
             }
         } else if (thumbnail.startsWith('data:image/')) {
             // If it's an encoded image, upload it as usual
             try {
                 const uploadedFile = await uploadThumbnailImageToStorage(thumbnail);
                 thumbnailUrl = uploadedFile.publicUrl();
-                const book = await Book.createBook({ bookApiId, owner, title, authors, description, publisher, thumbnail: thumbnailUrl, category, pageCount, progress, shelf });
-                res.status(200).json({ book });
             } catch (error) {
-                console.error('Error uploading encoded image:', error);
-                return res.status(500).json({ error: 'Failed to upload encoded image' });
+                throw new Error('Failed to upload encoded image');
             }
         } else {
-            return res.status(400).json({ error: 'Invalid thumbnail URL' });
+            throw new Error('Invalid thumbnail URL');
         }
+
+        book.thumbnail = thumbnailUrl;
+        book.save();
+
+        res.status(200).json({ book });
     } catch (error: any) {
-        const lastIndex = error.message.lastIndexOf(":") + 1;
-        const desiredMessage = error.message.substring(lastIndex).trim();
-        res.status(400).json({ error: desiredMessage });
+        console.error('Unexpected error occurred:', error);
+        return res.status(500).json({ error: error.message });
     }
 }
+
 
 const updateBook = async (req: IGetUserAuthInfoRequest, res: Response) => {
     const userId = req.user?._id;
