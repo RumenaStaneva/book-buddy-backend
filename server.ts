@@ -6,6 +6,7 @@ import userRoutes from './routes/user';
 import apiRoutes from './routes/api';
 import noteRoutes from './routes/notes';
 import timeSwapRoutes from './routes/timeSwap';
+import spotifyRoutes from './routes/spotify';
 import tokenCleanup from './tokenCleanup';
 import mongoose from 'mongoose';
 import swaggerUi from 'swagger-ui-express';
@@ -36,6 +37,7 @@ app.use((req: Request, res: Response, next) => {
     next();
 });
 
+app.use('/spotify', spotifyRoutes);
 app.use('/users', userRoutes);
 app.use('/api', apiRoutes);
 app.use('/books', bookRoutes);
