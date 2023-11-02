@@ -19,16 +19,11 @@ router.get('/', (req: Request, res: Response) => {
 });
 
 router.use(requireAuth);
-//fire this middleware before everything bellow so that thwy are protected
-//require auth for all books routes
 router.get('/library', getUserLibrary)
-
 router.post('/add-to-shelf', upload.single('thumbnail'), addToShelf);
-
 router.get('/see-all', getAllBooksOnShelf);
 router.put('/update-book', upload.single('thumbnail'), updateBook);
 router.get('/book-details', getBookDetails);
 router.delete('/delete-book', deleteBook);
-
 
 export default router;

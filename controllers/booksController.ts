@@ -133,15 +133,14 @@ const updateBook = async (req: IGetUserAuthInfoRequest, res: Response) => {
         return res.status(401).json({ error: 'User does not exist' });
     }
 
-
     try {
         const book = await Book.findOne({ owner: userId, _id: _id });
         if (!book) {
             return res.status(400).json({ message: 'Book does not exist' });
         }
 
-        if (progress < 0) {
-            return res.status(400).json({ message: 'Progress must be a positive number' });
+        if (Number(progress) <= 0) {
+            return res.status(400).json({ error: 'Progress must be a positive number' });
         }
 
         const updatedProgress = progress;
