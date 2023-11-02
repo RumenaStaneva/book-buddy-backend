@@ -64,6 +64,10 @@ const addToShelf = async (req: IGetUserAuthInfoRequest, res: Response) => {
         shelf
     } = req.body;
 
+    console.log('req.body', req.body);
+    console.log('req.body.thumbnail', req.body.thumbnail);
+
+
     const userId = req.user?._id;
     const user = await User.findOne({ _id: userId });
     let owner;
@@ -76,32 +80,37 @@ const addToShelf = async (req: IGetUserAuthInfoRequest, res: Response) => {
 
     const maxFileSizeInBytes = 10 * 1024 * 1024; // 10MB
     const encodedImage = thumbnail;
-    if (encodedImage.length > maxFileSizeInBytes) {
+    if (thumbnail && encodedImage.length > maxFileSizeInBytes) {
         return res.status(400).json({ error: 'Uploaded image is too large. Please choose a smaller image.' });
     }
 
     try {
         const book = await Book.createBook({ bookApiId, owner, title, authors, description, publisher, thumbnail, category, pageCount, progress, shelf });
-
         let thumbnailUrl = null;
-        if (thumbnail.startsWith('http://books.google.com/books')) {
-            // If the thumbnail URL is from Google Books API, upload the URL directly
-            try {
-                const uploadedFile = await uploadImageByUrlToStorage(thumbnail);
-                thumbnailUrl = uploadedFile.publicUrl();
-            } catch (error) {
-                throw new Error('Failed to upload Google Books API thumbnail');
-            }
-        } else if (thumbnail.startsWith('data:image/')) {
-            // If it's an encoded image, upload it as usual
-            try {
-                const uploadedFile = await uploadThumbnailImageToStorage(thumbnail);
-                thumbnailUrl = uploadedFile.publicUrl();
-            } catch (error) {
-                throw new Error('Failed to upload encoded image');
-            }
+
+        if (!thumbnail) {
+            thumbnailUrl = undefined;
+
         } else {
-            throw new Error('Invalid thumbnail URL');
+            if (thumbnail.startsWith('http://books.google.com/books')) {
+                // If the thumbnail URL is from Google Books API, upload the URL directly
+                try {
+                    const uploadedFile = await uploadImageByUrlToStorage(thumbnail);
+                    thumbnailUrl = uploadedFile.publicUrl();
+                } catch (error) {
+                    throw new Error('Failed to upload Google Books API thumbnail');
+                }
+            } else if (thumbnail.startsWith('data:image/')) {
+                // If it's an encoded image, upload it as usual
+                try {
+                    const uploadedFile = await uploadThumbnailImageToStorage(thumbnail);
+                    thumbnailUrl = uploadedFile.publicUrl();
+                } catch (error) {
+                    throw new Error('Failed to upload encoded image');
+                }
+            } else {
+                throw new Error('Invalid thumbnail URL');
+            }
         }
 
         book.thumbnail = thumbnailUrl;
