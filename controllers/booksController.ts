@@ -64,10 +64,6 @@ const addToShelf = async (req: IGetUserAuthInfoRequest, res: Response) => {
         shelf
     } = req.body;
 
-    console.log('req.body', req.body);
-    console.log('req.body.thumbnail', req.body.thumbnail);
-
-
     const userId = req.user?._id;
     const user = await User.findOne({ _id: userId });
     let owner;
