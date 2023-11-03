@@ -189,11 +189,11 @@ bookSchema.statics.createBook = async function (data) {
             }
 
             if (pageCount === undefined || pageCount <= 0) {
-                throw new Error('Page count must be a positive integer');
+                throw new Error('Book pages must be a positive number');
             }
 
             if (!Object.values(ShelfType).includes(Number(shelf))) {
-                throw new Error('Invalid shelf');
+                throw new Error('Invalid book status');
             }
 
             if (!Object.values(CategoryType).includes(category)) {
