@@ -160,7 +160,6 @@ const updateReadingTimeForToday = async (req: IGetUserAuthInfoRequest, res: Resp
         if (!existingUser) {
             return res.status(400).json({ error: 'User does not exist' });
         }
-
         const { date, totalReadingGoalForTheDay, timeInSecondsForTheDayReading, currentlyReadingBookId } = req.body;
         const previouslyReadingTimeForTheDay = await readingTimePerDayModel.findOne({ userId, date });
         const previousReadingTime = previouslyReadingTimeForTheDay ? previouslyReadingTimeForTheDay.timeInSecondsForTheDayReading : 0;

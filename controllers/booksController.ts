@@ -33,13 +33,13 @@ const getUserLibrary = async (req: IGetUserAuthInfoRequest, res: Response) => {
         try {
             const wantToReadBooks = await Book.find({ owner: userId, shelf: 0 })
                 .sort({ _id: -1 })
-                .limit(5);
+                .limit(3);
             const currentlyReadingBooks = await Book.find({ owner: userId, shelf: 1 })
                 .sort({ _id: -1 })
-                .limit(5);
+                .limit(3);
             const readBooks = await Book.find({ owner: userId, shelf: 2 })
                 .sort({ _id: -1 })
-                .limit(5);
+                .limit(3);
             res.status(200).json({ wantToReadBooks, currentlyReadingBooks, readBooks });
         } catch (error: any) {
             res.status(400).json({ error: error.message });
@@ -144,7 +144,7 @@ const updateBook = async (req: IGetUserAuthInfoRequest, res: Response) => {
             return res.status(400).json({ message: 'Book does not exist' });
         }
 
-        if (Number(progress) <= 0) {
+        if (Number(progress) < 0) {
             return res.status(400).json({ error: 'Progress must be a positive number' });
         }
 
