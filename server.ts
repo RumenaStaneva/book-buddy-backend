@@ -48,11 +48,11 @@ app.get('/', (req, res) => {
     res.type('text/html');
     res.send('<h1>I am html</h1>');
 })
-app.get("*", (req, res) => {
-    res.sendFile(
-        path.join(__dirname, "../client/build/index.html")
-    );
-});
+// app.get("*", (req, res) => {
+//     res.sendFile(
+//         path.join(__dirname, "../client/build/index.html")
+//     );
+// });
 
 mongoose.connect(MONGO_URI)
     .then(() => {
