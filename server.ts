@@ -53,10 +53,10 @@ app.get('/', (req, res) => {
 //         path.join(__dirname, "../client/build/index.html")
 //     );
 // });
-
+const host = '0.0.0.0';
 mongoose.connect(MONGO_URI)
     .then(() => {
-        app.listen(PORT, () => {
+        app.listen(Number(PORT), host, () => {
             console.log('Connected to db & listening on port:', PORT)
         })
     })
