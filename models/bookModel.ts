@@ -2,6 +2,8 @@ import mongoose, { Schema, Model } from 'mongoose';
 import ShelfType from '../enums/shelfTypes';
 import CategoryType from '../enums/categoryTypes';
 import { body } from 'express-validator';
+import { validationResult } from 'express-validator';
+import { uploadThumbnailImageToStorage, uploadImageByUrlToStorage } from '../utils/googlestorage'
 
 interface BookModel extends Model<BookDocument> {
     createBook(data: BookData): Promise<BookDocument>;
@@ -102,7 +104,7 @@ const bookSchema = new Schema({
     },
     title: {
         type: String,
-        default: 'No author/s'
+        default: 'No title'
     },
     authors: {
         type: Array,
@@ -111,9 +113,15 @@ const bookSchema = new Schema({
     description: {
         type: String,
         required: true,
+        validate: {
+            validator: function (value: any) {
+                return value !== 'undefined' && typeof value !== 'undefined';
+            },
+            message: 'Description cannot be empty'
+        }
     },
     publisher: {
-        type: String,
+        type: String || undefined,
     },
     thumbnail: {
         type: String,
@@ -148,16 +156,23 @@ const bookSchema = new Schema({
 
 bookSchema.statics.createBook = async function (data) {
 
-    const { bookApiId, owner, title, authors, description, publisher, thumbnail, category, pageCount, notes, progress, shelf } = data;
+    const { bookApiId, owner, title, authors, description, publisher, category, pageCount, progress, shelf } = data;
+    // console.log('description', typeof description);
+
     try {
         await Promise.all([
             body(bookApiId).notEmpty().withMessage('Book API ID is required').trim().run(this),
             body(owner).notEmpty().withMessage('Owner ID is required').trim().run(this),
             body(title).trim().run(this),
-            body(authors).notEmpty().withMessage('Authors are required').isArray().run(this),
-            body(description).notEmpty().withMessage('Description is required').trim().run(this),
-            body(publisher).trim().run(this),
-            body(thumbnail).trim().run(this),
+            body('description')
+                .notEmpty().withMessage('Description is required')
+                .isString().withMessage('Description must be a string')
+                .custom((value, { req }) => {
+                    if (value === 'undefined') {
+                        throw new Error('Description cannot be "undefined"');
+                    }
+                    return true;
+                }),
             body(category).notEmpty().withMessage('Category is required').isIn(Object.values(CategoryType)).run(this),
             body(pageCount).notEmpty().withMessage('Page count is required').isInt({ min: 1 }).withMessage('Page count must be a positive integer'),
             body(progress).isNumeric().run(this),
@@ -169,7 +184,23 @@ bookSchema.statics.createBook = async function (data) {
         if (existingBook) {
             throw new Error('Book already exists in your shelf');
         } else {
-            const book = await this.create({ bookApiId, owner, title, authors, description, publisher, thumbnail, category, pageCount, progress, shelf })
+            if (description === undefined || description === 'undefined' || description.trim() === '') {
+                throw new Error('Description cannot be empty');
+            }
+
+            if (pageCount === undefined || pageCount <= 0) {
+                throw new Error('Book pages must be a positive number');
+            }
+
+            if (!Object.values(ShelfType).includes(Number(shelf))) {
+                throw new Error('Invalid book status');
+            }
+
+            if (!Object.values(CategoryType).includes(category)) {
+                throw new Error('Invalid category');
+            }
+
+            const book = await this.create({ bookApiId, owner, title, authors: authors != 'undefined' ? authors : undefined, description, publisher: publisher != 'undefined' ? publisher : undefined, thumbnail: '', category, pageCount, progress, shelf })
             return book;
         }
 

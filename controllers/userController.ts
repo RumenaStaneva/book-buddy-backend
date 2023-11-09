@@ -101,12 +101,13 @@ const updateProfile = async (req: IGetUserAuthInfoRequest, res: Response) => {
     const { bio, username } = req.body;
     const userId = req.user?._id;
 
+
     const existingUser = await User.findOne({ username });
-    if (existingUser && existingUser._id.toString() !== userId) {
-        return res.status(400).json({ error: 'Username is already in use' });
-    }
 
     try {
+        if (existingUser && existingUser._id.toString() !== userId.toString()) {
+            return res.status(400).json({ error: 'Username is already in use' });
+        }
         const updatedProfile = await User.findOneAndUpdate(
             { _id: userId },
             { bio, username },

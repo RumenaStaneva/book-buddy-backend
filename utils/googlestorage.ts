@@ -1,5 +1,6 @@
 import { Storage } from '@google-cloud/storage';
 import { v4 as uuidv4 } from 'uuid';
+import axios from 'axios';
 
 const storage = new Storage({
     projectId: process.env.GOOGLE_STORAGE_PROJECT_ID,
@@ -41,6 +42,36 @@ async function uploadThumbnailImageToStorage(encodedImage: string) {
     return file;
 }
 
+async function uploadImageByUrlToStorage(imageUrl: string) {
+
+    try {
+        const response = await axios.get(imageUrl, {
+            responseType: 'arraybuffer',
+        });
+
+        if (response.status !== 200) {
+            throw new Error('Failed to download image');
+        }
+
+        const imageBuffer = Buffer.from(response.data, 'binary');
+
+        const uniqueFilename = `${Date.now()}.png`;
+
+        const file = bucket.file(`book-thumbnails/${uniqueFilename}`);
+
+        await file.save(imageBuffer, {
+            metadata: {
+                contentType: 'image/png',
+            },
+        });
+        return file;
+    } catch (error) {
+        console.error('Error uploading image from URL to Google Cloud Storage:', error);
+        throw new Error('Failed to upload image from URL to Google Cloud Storage');
+    }
+}
+
+
 const deleteImageFromStorage = async (fileName: string) => {
     try {
         console.log('fileName', fileName);
@@ -53,4 +84,9 @@ const deleteImageFromStorage = async (fileName: string) => {
     }
 };
 
-export { uploadImageToStorage, deleteImageFromStorage, uploadThumbnailImageToStorage };
+function isBase64(str: string): boolean {
+    const base64Regex = /^data:image\/\w+;base64,/;
+    return base64Regex.test(str);
+}
+
+export { uploadImageToStorage, deleteImageFromStorage, uploadThumbnailImageToStorage, uploadImageByUrlToStorage, isBase64 };

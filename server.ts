@@ -6,11 +6,13 @@ import userRoutes from './routes/user';
 import apiRoutes from './routes/api';
 import noteRoutes from './routes/notes';
 import timeSwapRoutes from './routes/timeSwap';
+import spotifyRoutes from './routes/spotify';
 import tokenCleanup from './tokenCleanup';
 import mongoose from 'mongoose';
 import swaggerUi from 'swagger-ui-express';
 import { loginWithGoogle } from './controllers/userController';
 // import swaggerSpec from './swagger.js';
+import path from "path";
 
 const app: Application = express();
 
@@ -24,7 +26,7 @@ app.use(cors());
 
 let PORT: string | number = process.env.DEV_PORT || 5000;
 let MONGO_URI: string = process.env.MONGO_URI || '';
-
+app.use(express.static(path.join(__dirname, "../client/build")))
 // app.use(
 //     "/book-buddy-docs",
 //     swaggerUi.serve,
@@ -36,11 +38,18 @@ app.use((req: Request, res: Response, next) => {
     next();
 });
 
+app.use('/spotify', spotifyRoutes);
 app.use('/users', userRoutes);
 app.use('/api', apiRoutes);
 app.use('/books', bookRoutes);
 app.use('/notes', noteRoutes);
 app.use('/time-swap', timeSwapRoutes);
+
+app.get("*", (req, res) => {
+    res.sendFile(
+        path.join(__dirname, "../client/build/index.html")
+    );
+});
 
 mongoose.connect(MONGO_URI)
     .then(() => {

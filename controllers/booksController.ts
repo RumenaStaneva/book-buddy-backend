@@ -4,7 +4,8 @@ import dotenv from 'dotenv';
 import Book from '../models/bookModel';
 import User from '../models/userModel';
 import { IGetUserAuthInfoRequest } from '../types/express';
-import { deleteImageFromStorage, uploadThumbnailImageToStorage } from '../utils/googlestorage'
+import { deleteImageFromStorage, uploadThumbnailImageToStorage, uploadImageByUrlToStorage, isBase64 } from '../utils/googlestorage'
+
 dotenv.config();
 
 let KEY = process.env.KEY;
@@ -32,13 +33,13 @@ const getUserLibrary = async (req: IGetUserAuthInfoRequest, res: Response) => {
         try {
             const wantToReadBooks = await Book.find({ owner: userId, shelf: 0 })
                 .sort({ _id: -1 })
-                .limit(5);
+                .limit(3);
             const currentlyReadingBooks = await Book.find({ owner: userId, shelf: 1 })
                 .sort({ _id: -1 })
-                .limit(5);
+                .limit(3);
             const readBooks = await Book.find({ owner: userId, shelf: 2 })
                 .sort({ _id: -1 })
-                .limit(5);
+                .limit(3);
             res.status(200).json({ wantToReadBooks, currentlyReadingBooks, readBooks });
         } catch (error: any) {
             res.status(400).json({ error: error.message });
@@ -75,23 +76,49 @@ const addToShelf = async (req: IGetUserAuthInfoRequest, res: Response) => {
 
     const maxFileSizeInBytes = 10 * 1024 * 1024; // 10MB
     const encodedImage = thumbnail;
-    if (encodedImage.length > maxFileSizeInBytes) {
+    if (thumbnail && encodedImage.length > maxFileSizeInBytes) {
         return res.status(400).json({ error: 'Uploaded image is too large. Please choose a smaller image.' });
     }
-    try {
-        //add the new encoded image to book 
-        const encodedImage = req.body.thumbnail;
-        const uploadedFile = await uploadThumbnailImageToStorage(encodedImage);
-        const thumbnailUrl = uploadedFile.publicUrl();
 
-        const book = await Book.createBook({ bookApiId, owner, title, authors, description, publisher, thumbnail: thumbnailUrl, category, pageCount, progress, shelf });
+    try {
+        const book = await Book.createBook({ bookApiId, owner, title, authors, description, publisher, thumbnail, category, pageCount, progress, shelf });
+        let thumbnailUrl = null;
+
+        if (!thumbnail) {
+            thumbnailUrl = undefined;
+
+        } else {
+            if (thumbnail.startsWith('http://books.google.com/books')) {
+                // If the thumbnail URL is from Google Books API, upload the URL directly
+                try {
+                    const uploadedFile = await uploadImageByUrlToStorage(thumbnail);
+                    thumbnailUrl = uploadedFile.publicUrl();
+                } catch (error) {
+                    throw new Error('Failed to upload Google Books API thumbnail');
+                }
+            } else if (thumbnail.startsWith('data:image/')) {
+                // If it's an encoded image, upload it as usual
+                try {
+                    const uploadedFile = await uploadThumbnailImageToStorage(thumbnail);
+                    thumbnailUrl = uploadedFile.publicUrl();
+                } catch (error) {
+                    throw new Error('Failed to upload encoded image');
+                }
+            } else {
+                throw new Error('Invalid thumbnail URL');
+            }
+        }
+
+        book.thumbnail = thumbnailUrl;
+        book.save();
+
         res.status(200).json({ book });
     } catch (error: any) {
-        const lastIndex = error.message.lastIndexOf(":") + 1;
-        const desiredMessage = error.message.substring(lastIndex).trim();
-        res.status(400).json({ error: desiredMessage });
+        console.error('Unexpected error occurred:', error);
+        return res.status(500).json({ error: error.message });
     }
 }
+
 
 const updateBook = async (req: IGetUserAuthInfoRequest, res: Response) => {
     const userId = req.user?._id;
@@ -110,14 +137,15 @@ const updateBook = async (req: IGetUserAuthInfoRequest, res: Response) => {
     if (!user) {
         return res.status(401).json({ error: 'User does not exist' });
     }
+
     try {
         const book = await Book.findOne({ owner: userId, _id: _id });
         if (!book) {
             return res.status(400).json({ message: 'Book does not exist' });
         }
 
-        if (progress < 0) {
-            return res.status(400).json({ message: 'Progress must be a positive number' });
+        if (Number(progress) < 0) {
+            return res.status(400).json({ error: 'Progress must be a positive number' });
         }
 
         const updatedProgress = progress;
@@ -128,12 +156,25 @@ const updateBook = async (req: IGetUserAuthInfoRequest, res: Response) => {
             book.shelf = shelf;
             book.progress = updatedProgress;
         }
+        if (isBase64(thumbnail)) {
+            // Thumbnail is base64 encoded, upload it to storage
 
-        if (book.thumbnail) {
-            const filePath = new URL(book.thumbnail).pathname;
-            const decodedFilePath = decodeURIComponent(filePath);
-            const fileName = decodedFilePath.replace(`/${process.env.GOOGLE_STORAGE_BUCKET}/`, '');
-            await deleteImageFromStorage(fileName);
+            if (book.thumbnail && thumbnail != book.thumbnail) {
+                // Delete the previous thumbnail from storage
+                const filePath = new URL(book.thumbnail).pathname;
+                const decodedFilePath = decodeURIComponent(filePath);
+                const fileName = decodedFilePath.replace(`/${process.env.GOOGLE_STORAGE_BUCKET}/`, '');
+                await deleteImageFromStorage(fileName);
+
+                //add the new encoded image to book 
+                const encodedImage = thumbnail;
+                const uploadedFile = await uploadThumbnailImageToStorage(encodedImage);
+                const thumbnailUrl = uploadedFile.publicUrl();
+                book.thumbnail = thumbnailUrl;
+            }
+
+            const uploadedFile = await uploadThumbnailImageToStorage(thumbnail);
+            book.thumbnail = uploadedFile.publicUrl();
         }
 
         book.title = title;
@@ -142,11 +183,6 @@ const updateBook = async (req: IGetUserAuthInfoRequest, res: Response) => {
         book.category = category;
         book.pageCount = pageCount;
 
-        //add the new encoded image to book 
-        const encodedImage = thumbnail;
-        const uploadedFile = await uploadThumbnailImageToStorage(encodedImage);
-        const thumbnailUrl = uploadedFile.publicUrl();
-        book.thumbnail = thumbnailUrl;
         await book.save();
         res.status(200).json({ book });
 

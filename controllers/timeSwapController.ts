@@ -11,7 +11,8 @@ import {
     convertToMMDDFormat,
     updateReadingTime,
     calculateReadingTimeSpendOnBook,
-    updateBookReadDuringDay
+    updateBookReadDuringDay,
+    validateScreenTimeData
 } from '../utils/timeSwap'
 
 const getCurrentWeekDates = async (req: IGetUserAuthInfoRequest, res: Response) => {
@@ -61,6 +62,9 @@ const saveTime = async (req: IGetUserAuthInfoRequest, res: Response) => {
     }
     try {
         const screenTimeData = req.body;
+        if (!validateScreenTimeData(screenTimeData)) {
+            return res.status(400).json({ error: 'Invalid screen time data' });
+        }
         const startDate = parse(screenTimeData[0].date, 'yyyy/MM/dd', new Date());
         const startOfWeekDay = startOfWeek(addWeeks(startDate, 1), { weekStartsOn: 2 });
         const lastWeekEnd = endOfWeek(addWeeks(startDate, 1), { weekStartsOn: 2 });
@@ -138,7 +142,7 @@ const hasReadingTimeAnytime = async (req: IGetUserAuthInfoRequest, res: Response
         const readingTime = await readingTimePerDayModel.find({
             userId: userId,
         }).sort({ date: 1 });
-        if (!readingTime) {
+        if (!readingTime || readingTime.length <= 0) {
             return res.status(200).json({ hasReadingTime: false });
         }
 
@@ -156,7 +160,6 @@ const updateReadingTimeForToday = async (req: IGetUserAuthInfoRequest, res: Resp
         if (!existingUser) {
             return res.status(400).json({ error: 'User does not exist' });
         }
-
         const { date, totalReadingGoalForTheDay, timeInSecondsForTheDayReading, currentlyReadingBookId } = req.body;
         const previouslyReadingTimeForTheDay = await readingTimePerDayModel.findOne({ userId, date });
         const previousReadingTime = previouslyReadingTimeForTheDay ? previouslyReadingTimeForTheDay.timeInSecondsForTheDayReading : 0;
