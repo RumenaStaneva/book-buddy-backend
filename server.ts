@@ -45,7 +45,8 @@ app.use('/books', bookRoutes);
 app.use('/notes', noteRoutes);
 app.use('/time-swap', timeSwapRoutes);
 app.get('/', (req, res) => {
-    console.log('server running');
+    res.type('text/html');
+    res.send('<h1>I am html</h1>');
 })
 app.get("*", (req, res) => {
     res.sendFile(
