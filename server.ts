@@ -44,7 +44,9 @@ app.use('/api', apiRoutes);
 app.use('/books', bookRoutes);
 app.use('/notes', noteRoutes);
 app.use('/time-swap', timeSwapRoutes);
-
+app.get('/', (req, res) => {
+    console.log('server running');
+})
 app.get("*", (req, res) => {
     res.sendFile(
         path.join(__dirname, "../client/build/index.html")
