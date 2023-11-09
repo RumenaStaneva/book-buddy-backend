@@ -24,7 +24,7 @@ app.use(express.json());
 app.use(cors());
 // app.use(express.urlencoded({ extended: false }));
 
-let PORT: string | number = process.env.DEV_PORT || 5000;
+let PORT: string | number = process.env.DEV_PORT || '';
 let MONGO_URI: string = process.env.MONGO_URI || '';
 app.use(express.static(path.join(__dirname, "../client/build")))
 // app.use(
