@@ -66,8 +66,8 @@ const saveTime = async (req: IGetUserAuthInfoRequest, res: Response) => {
             return res.status(400).json({ error: 'Invalid screen time data' });
         }
         const startDate = parse(screenTimeData[0].date, 'yyyy/MM/dd', new Date());
-        const startOfWeekDay = startOfWeek(addWeeks(startDate, 1), { weekStartsOn: 2 });
-        const lastWeekEnd = endOfWeek(addWeeks(startDate, 1), { weekStartsOn: 2 });
+        const startOfWeekDay = startOfWeek(addWeeks(startDate, 1), { weekStartsOn: 1 });
+        const lastWeekEnd = endOfWeek(addWeeks(startDate, 1), { weekStartsOn: 1 });
         console.log('startDate', startDate);
         console.log('startOfWeekDay', startOfWeekDay);
         console.log('lastWeekEnd', lastWeekEnd);
