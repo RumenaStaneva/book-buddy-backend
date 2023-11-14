@@ -6,7 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "postinstall": "tsc",
-    "build": "tsc && npm run copy-templates",
+    "build": "npm run copy-templates",
     "copy-templates": "node copy-templates.js",
     "start": "npm run build && node dist/server.js",
     "dev": "nodemon server.ts"
