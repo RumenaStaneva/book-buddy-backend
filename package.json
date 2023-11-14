@@ -7,7 +7,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "postinstall": "tsc",
     "build": "tsc && npm run copy-templates",
-    "copy-templates": "npx copyfiles -u 1 src/emailTemplates/**/* dist/emailTemplates",
+    "copy-templates": "node copy-templates.js",
     "start": "npm run build && node dist/server.js",
     "dev": "nodemon server.ts"
   },
@@ -44,12 +44,14 @@
     "@types/express": "^4.17.18",
     "@types/jsonwebtoken": "^9.0.3",
     "@types/multer": "^1.4.8",
+    "@types/ncp": "^2.0.8",
     "@types/node-cron": "^3.0.9",
     "@types/nodemailer": "^6.4.11",
     "@types/swagger-ui-express": "^4.1.4",
     "@types/uuid": "^9.0.5",
     "@types/validator": "^13.11.2",
     "copyfiles": "^2.4.1",
+    "ncp": "^2.0.0",
     "nodemon": "^3.0.1",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.2.2"
