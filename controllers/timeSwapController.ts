@@ -68,6 +68,9 @@ const saveTime = async (req: IGetUserAuthInfoRequest, res: Response) => {
         const startDate = parse(screenTimeData[0].date, 'yyyy/MM/dd', new Date());
         const startOfWeekDay = startOfWeek(addWeeks(startDate, 1), { weekStartsOn: 2 });
         const lastWeekEnd = endOfWeek(addWeeks(startDate, 1), { weekStartsOn: 2 });
+        console.log('startDate', startDate);
+        console.log('startOfWeekDay', startOfWeekDay);
+        console.log('lastWeekEnd', lastWeekEnd);
 
         const existingReadingTimeData = await readingTimePerDayModel.find({
             userId: userId,
@@ -107,6 +110,8 @@ const getReadingTime = async (req: IGetUserAuthInfoRequest, res: Response) => {
     try {
         const startDate = String(req.query.startDate);
         const endDate = String(req.query.endDate);
+        console.log('startDate', startDate);
+        console.log('endDate', endDate);
 
         if (!startDate || !endDate) {
             return res.status(400).json({ error: 'startDate and endDate are required parameters.' });
@@ -118,11 +123,13 @@ const getReadingTime = async (req: IGetUserAuthInfoRequest, res: Response) => {
         //converting the dates to UTC
         const utcStartDate = new Date(parsedStartDate.getTime() - parsedStartDate.getTimezoneOffset() * 60000);
         const utcEndDate = new Date(parsedEndDate.getTime() - parsedEndDate.getTimezoneOffset() * 60000);
-
+        console.log('utcStartDate', utcStartDate);
+        console.log('utcEndDate', utcEndDate);
         const readingTime = await readingTimePerDayModel.find({
             userId: userId,
             date: { $gte: utcStartDate, $lte: utcEndDate }
         }).sort({ date: 1 });
+        console.log(readingTime);
 
         return res.status(200).json({ readingTime });
 
