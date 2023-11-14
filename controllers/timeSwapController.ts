@@ -83,14 +83,20 @@ const saveTime = async (req: IGetUserAuthInfoRequest, res: Response) => {
 
         const screenTimeDataForTheWeek = screenTimeData.map((data: any) => {
             const date = convertToMMDDFormat(data.date);
+            console.log('date', date);
+
             const screenTimeInSeconds = data.timeInSeconds;
             return { date, screenTimeInSeconds };
         })
+
+        console.log('screenTimeDataForTheWeek', screenTimeDataForTheWeek);
+
         const weeklyGoalAveragePerDay = calculateWeeklyGoalAverage(screenTimeDataForTheWeek);
         const readingTimeData = prepareReadingTimeData(screenTimeDataForTheWeek, weeklyGoalAveragePerDay);
+        console.log('readingTimeData', readingTimeData);
 
         const savedReadingTimeData = await saveReadingTimeData(userId, readingTimeData);
-        console.log(savedReadingTimeData);
+        console.log('savedReadingTimeData', savedReadingTimeData);
 
         return res.status(200).json({
             savedReadingTimeData
