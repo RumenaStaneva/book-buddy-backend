@@ -51,7 +51,7 @@ app.get('/', (req, res) => {
 const host = '0.0.0.0';
 mongoose.connect(MONGO_URI)
     .then(() => {
-        app.listen(Number(PORT), process.env.HOST || host, () => {
+        app.listen(Number(PORT), host, () => {
             console.log('Connected to db & listening on port:', PORT)
         })
     })
