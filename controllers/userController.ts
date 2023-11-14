@@ -21,6 +21,9 @@ const loginUser = async (req: Request, res: Response) => {
         const isVerified = user.isVerified;
         const profilePictureUrl = user.profilePicture;
         if (user) {
+            user.verificationToken = null;
+            user.verificationTokenExpiry = null;
+            await user.save();
             const token = createToken(user._id);
             res.status(200).json({ email, token, username, isVerified, profilePicture: profilePictureUrl });
         }
