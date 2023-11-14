@@ -6,7 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "postinstall": "tsc",
-    "start": "node dist/server.js",
+    "copy-templates": "copyfiles -u 1 src/emailTemplates/**/* dist/emailTemplates",
+    "start": "npm run copy-templates && node dist/server.js",
     "dev": "nodemon server.ts"
   },
   "author": "",
