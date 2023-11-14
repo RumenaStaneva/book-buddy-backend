@@ -5,14 +5,17 @@ import Book from '../models/bookModel';
 import User from '../models/userModel';
 import { IGetUserAuthInfoRequest } from '../types/express';
 import { deleteImageFromStorage, uploadThumbnailImageToStorage, uploadImageByUrlToStorage, isBase64 } from '../utils/googlestorage'
-
+import noteModel from '../models/noteModel';
+import { getStartOfCurrentWeek, convertToMMDDFormat } from '../utils/timeSwap';
 dotenv.config();
 
 let KEY = process.env.KEY;
 
 const searchBooks = async (req: Request, res: Response) => {
+
     try {
         const { title, startIndex, maxResults } = req.body;
+        console.log(title);
         const url = `https://www.googleapis.com/books/v1/volumes?q=${title}&startIndex=${startIndex}&maxResults=${maxResults}&printType=books&key=${KEY}`;
         const response = await axios.get(url);
         if (response.status !== 200) {
@@ -25,6 +28,59 @@ const searchBooks = async (req: Request, res: Response) => {
         res.status(500).json({ error: 'Error fetching books from the Google Books API' });
     }
 }
+
+// const searchBooks = async (req: Request, res: Response) => {
+
+//     try {
+//         const { title, startIndex, maxResults } = req.body;
+//         console.log(title, startIndex);
+
+//         const options = {
+//             method: 'GET',
+//             url: 'https://goodreads-books.p.rapidapi.com/search',
+//             params: {
+//                 q: title,
+//                 page: startIndex
+//             },
+//             headers: {
+//                 'X-RapidAPI-Key': 'c49ae73edfmsh70476938f4af21ap150b35jsn9a79e4f4c7ae',
+//                 'X-RapidAPI-Host': 'goodreads-books.p.rapidapi.com'
+//             }
+//         };
+//         const response = await axios.request(options);
+//         if (response.status !== 200) {
+//             throw new Error(`Error fetching books: ${response.statusText}`);
+//         }
+//         console.log(response.data);
+//         const responseData = await response.data;
+//         res.json(responseData);
+//     } catch (error: any) {
+//         if (error.response && error.response.status === 429) {
+//             // Retry with exponential backoff
+//             const delay = Math.pow(2, error.response.headers['retry-after'] || 0) * 1000;
+//             console.log(`Retrying after ${delay} milliseconds...`);
+//             setTimeout(() => {
+//                 searchBooks(req, res);
+//             }, delay);
+//         } else {
+//             console.error('Error fetching books from Goodreads API:', error.message);
+//             res.status(500).json({ error: 'Error fetching books from the Goodreads API' });
+//         }
+//     }
+// }
+const nytBooks = async (req: Request, res: Response) => {
+    try {
+        const url = `https://api.nytimes.com/svc/books/v3/lists/full-overview.json?api-key=${process.env.NYT_KEY}`;
+        const response = await axios.get(url);
+        const responseData = response.data;
+        res.json(responseData);
+    } catch (error: any) {
+        // console.error('Error fetching books:', error.message);
+        // console.error('Response data:', error.response?.data);
+        // console.error('Status code:', error.response?.status);
+        res.status(500).json({ error: 'Error fetching books from the NYT Books API' });
+    }
+};
 
 const getUserLibrary = async (req: IGetUserAuthInfoRequest, res: Response) => {
     const userId = req.user?._id;
@@ -245,6 +301,7 @@ const deleteBook = async (req: Request, res: Response) => {
     const bookId = req.query.bookId;
     try {
         const deletedBook = await Book.findByIdAndDelete(bookId);
+        await noteModel.deleteMany({ bookId: bookId });
         if (deletedBook && deletedBook.thumbnail) {
             const filePath = new URL(deletedBook.thumbnail).pathname;
             const decodedFilePath = decodeURIComponent(filePath);
@@ -265,4 +322,5 @@ export {
     updateBook,
     getBookDetails,
     deleteBook,
+    nytBooks
 }

@@ -44,7 +44,7 @@ async function saveReadingTimeData(userId: string, readingTimeData: any[]) {
 
 const getStartOfCurrentWeek = (): Date => {
     const currentDate = new Date();
-    const firstDayOfWeek = startOfWeek(currentDate, { weekStartsOn: 2 }); // i made it to start on 2 cuz the 1 was giving sunday
+    const firstDayOfWeek = startOfWeek(currentDate, { weekStartsOn: 2 });
     return firstDayOfWeek;
 };
 

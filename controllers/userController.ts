@@ -34,9 +34,10 @@ const signUpUser = async (req: Request, res: Response) => {
     const { email, password, username } = req.body;
     const isAdmin = false;
     const bio = '';
-
     try {
         const user = await User.signup(email, password, isAdmin, bio, username);
+        console.log(user);
+
         res.status(200).json(null);
     } catch (error: any) {
         res.status(400).json({ error: error.message });

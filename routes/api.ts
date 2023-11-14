@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { searchBooks } from '../controllers/booksController';
+import { searchBooks, nytBooks } from '../controllers/booksController';
 
 const router = Router();
 /**
@@ -12,6 +12,7 @@ const router = Router();
  *         description: Successful response.
  */
 router.post('/search-book-title', searchBooks);
+router.post('/popular-books', nytBooks);
 
 
 export default router;
