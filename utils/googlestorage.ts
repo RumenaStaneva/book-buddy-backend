@@ -74,8 +74,6 @@ async function uploadImageByUrlToStorage(imageUrl: string) {
 
 const deleteImageFromStorage = async (fileName: string) => {
     try {
-        console.log('fileName', fileName);
-
         await storage.bucket(`${process.env.GOOGLE_STORAGE_BUCKET}`).file(fileName).delete();
         console.log(`File ${fileName} deleted successfully.`);
     } catch (error) {

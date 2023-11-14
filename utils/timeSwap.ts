@@ -11,11 +11,7 @@ function calculateWeeklyGoalAverage(screenTimeData: any[]): number {
 
 function prepareReadingTimeData(screenTimeDataForTheWeek: any[], weeklyGoalAveragePerDay: number) {
     const startOfNextWeek = startOfWeek(addWeeks(screenTimeDataForTheWeek[0].date, 1), { weekStartsOn: 1 });
-    console.log('prepareReadingTimeData startOfNextWeek', startOfNextWeek);
-
     const endOfNextWeek = endOfWeek(startOfNextWeek, { weekStartsOn: 1 });
-    console.log('prepareReadingTimeData endOfNextWeek', endOfNextWeek);
-
     const interval = { start: startOfNextWeek, end: endOfNextWeek };
     const nextWeekDays = eachDayOfInterval(interval);
     return screenTimeDataForTheWeek.map((data: any, index) => {
