@@ -48,15 +48,10 @@ app.get('/', (req, res) => {
     res.type('text/html');
     res.send('<h1>I am html</h1>');
 })
-// app.get("*", (req, res) => {
-//     res.sendFile(
-//         path.join(__dirname, "../client/build/index.html")
-//     );
-// });
 const host = '0.0.0.0';
 mongoose.connect(MONGO_URI)
     .then(() => {
-        app.listen(Number(PORT), host, () => {
+        app.listen(Number(PORT), process.env.HOST || host, () => {
             console.log('Connected to db & listening on port:', PORT)
         })
     })
