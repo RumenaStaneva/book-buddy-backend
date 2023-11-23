@@ -1,6 +1,6 @@
-const swaggerJSDoc = require('swagger-jsdoc');
+import swaggerJSDoc from 'swagger-jsdoc';
 
-const options = {
+const options: swaggerJSDoc.Options = {
     swaggerDefinition: {
         openapi: '3.0.0',
         info: {
@@ -75,7 +75,8 @@ const options = {
                         },
                     },
                     required: ['bookApiId', 'owner', 'title', 'authors', 'description', 'pageCount', 'shelf'],
-                }, User: {
+                },
+                User: {
                     type: 'object',
                     properties: {
                         email: {
@@ -100,5 +101,4 @@ const options = {
 };
 
 const swaggerSpec = swaggerJSDoc(options);
-// console.log('Swagger Spec:', swaggerSpec);
-module.exports = swaggerSpec;
+export default swaggerSpec;

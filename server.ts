@@ -11,7 +11,7 @@ import tokenCleanup from './tokenCleanup';
 import mongoose from 'mongoose';
 import swaggerUi from 'swagger-ui-express';
 import { loginWithGoogle } from './controllers/userController';
-const swaggerSpec = require('./swagger.js');
+import swaggerSpec from './swagger';
 import path from "path";
 
 const app: Application = express();
