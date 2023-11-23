@@ -43,6 +43,12 @@ app.use('/api', apiRoutes);
 app.use('/books', bookRoutes);
 app.use('/notes', noteRoutes);
 app.use('/time-swap', timeSwapRoutes);
+
+app.get('/', (req, res) => {
+    res.type('text/html');
+    res.send('<h1>Hi there!</h1>');
+})
+
 const host = '0.0.0.0';
 mongoose.connect(MONGO_URI)
     .then(() => {
