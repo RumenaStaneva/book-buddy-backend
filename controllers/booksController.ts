@@ -11,14 +11,20 @@ dotenv.config();
 let KEY = process.env.KEY;
 
 const searchBooks = async (req: Request, res: Response) => {
+    console.log('hahahaha');
+
     try {
         const { title, startIndex, maxResults } = req.body;
+        console.log(title);
+
         const url = `https://www.googleapis.com/books/v1/volumes?q=${title}&startIndex=${startIndex}&maxResults=${maxResults}&printType=books&key=${KEY}`;
         const response = await axios.get(url);
         if (response.status !== 200) {
             throw new Error(`Error fetching books: ${response.statusText}`);
         }
         const responseData = await response.data;
+        console.log('responseData', responseData);
+
         res.json(responseData);
     } catch (error: any) {
         console.error('Error fetching books:', error.message);

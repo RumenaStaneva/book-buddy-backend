@@ -11,13 +11,12 @@ import tokenCleanup from './tokenCleanup';
 import mongoose from 'mongoose';
 import swaggerUi from 'swagger-ui-express';
 import { loginWithGoogle } from './controllers/userController';
-// import swaggerSpec from './swagger.js';
+const swaggerSpec = require('./swagger.js');
 import path from "path";
 
 const app: Application = express();
 
 
-// const swaggerSpec = require('./swagger.js');
 
 dotenv.config();
 app.use(express.json());
@@ -27,11 +26,11 @@ app.use(cors());
 let PORT: string | number = process.env.PORT || 5000;
 let MONGO_URI: string = process.env.MONGO_URI || '';
 app.use(express.static(path.join(__dirname, "../client/build")))
-// app.use(
-//     "/book-buddy-docs",
-//     swaggerUi.serve,
-//     swaggerUi.setup(swaggerSpec, { explorer: true })
-// );
+app.use(
+    "/book-buddy-docs",
+    swaggerUi.serve,
+    swaggerUi.setup(swaggerSpec, { explorer: true })
+);
 
 //middleware
 app.use((req: Request, res: Response, next) => {
@@ -44,10 +43,6 @@ app.use('/api', apiRoutes);
 app.use('/books', bookRoutes);
 app.use('/notes', noteRoutes);
 app.use('/time-swap', timeSwapRoutes);
-app.get('/', (req, res) => {
-    res.type('text/html');
-    res.send('<h1>I am html</h1>');
-})
 const host = '0.0.0.0';
 mongoose.connect(MONGO_URI)
     .then(() => {
