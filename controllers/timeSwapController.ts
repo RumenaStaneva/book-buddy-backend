@@ -122,7 +122,7 @@ const getReadingTime = async (req: IGetUserAuthInfoRequest, res: Response) => {
             userId: userId,
             date: { $gte: utcStartDate, $lte: utcEndDate }
         }).sort({ date: 1 });
-        console.log(readingTime);
+        // console.log(readingTime);
 
         return res.status(200).json({ readingTime });
 
